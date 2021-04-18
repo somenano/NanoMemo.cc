@@ -28,3 +28,8 @@ html {
   white-space: pre-wrap; 
   word-break: break-word;
 }
+
+.link-muted:link { color: #6c757d; }
+.link-muted:visited { color: #6c757d; }
+.link-muted:hover { color: #212529; }
+.link-muted:active { color: #6c757d; }

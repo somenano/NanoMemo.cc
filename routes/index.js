@@ -36,6 +36,7 @@ router.get('/docs/api', async function(req, res, next) {
     title: 'RESTful API Documentation | NanoMemo.cc',
     page: 'docs',
     url: process.env.URL,
+    wss: process.env.WSS,
     message_max_length: process.env.MESSAGE_LENGTH,
     NanoMemoTools: NanoMemoTools
   });

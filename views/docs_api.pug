@@ -24,6 +24,12 @@ block content
         li
           a(href="#user") #{url}/api/user
 
+    div(id="websocket")
+      h3 WebSocket
+      ul
+        li
+          a(href="#websocket-subscribe") #{wss}
+
     hr(width="50%")
 
     div(id="hash")
@@ -66,7 +72,7 @@ block content
                     | &nbsp;descriptive string if success == false, undefined otherwise
                   li
                     strong data.message:
-                    | &nbsp;messsag in plaintext or encrypted
+                    | &nbsp;message in plaintext or encrypted
                   li
                     strong data.hash:
                     | &nbsp;Nano block hash the memo is associated with
@@ -184,7 +190,7 @@ block content
                     | &nbsp;remaining credits available to the user
                   li
                     strong data.message:
-                    | &nbsp;messsag in plaintext or encrypted
+                    | &nbsp;message in plaintext or encrypted
                   li
                     strong data.hash:
                     | &nbsp;Nano block hash the memo is associated with
@@ -313,3 +319,64 @@ block content
                   | &nbsp;&nbsp;&nbsp;}
                   br
                   | &nbsp;}
+
+    div(id="websocket-subscribe")
+      h3 WebSocket
+      table(class="table")
+        tbody
+          tr
+            td(class="text-muted") endpoint
+            td #{wss}
+          tr
+            td(class="text-muted") request type
+            td WebSocket
+          tr
+            td(class="text-muted") API Key Required
+            td No
+          tr
+            td(class="text-muted") description
+            td Receive a WebSocket message for every new memo saved on NanoMemo
+          tr
+            td(class="text-muted") messages to server
+            td
+              small
+                ul
+                  li
+                    strong subscribe
+                    | &nbsp;- {action: 'subscribe'}
+                  li
+                    strong unsubscribe
+                    | &nbsp;- {action: 'unsubscribe'}
+
+          tr
+            td(class="text-muted") messages from server
+            td
+              small
+                ul
+                  li
+                    strong message:
+                    | &nbsp;message in plaintext or encrypted
+                  li
+                    strong hash:
+                    | &nbsp;Nano block hash the memo is associated with
+                  li
+                    strong signature:
+                    | &nbsp;digital signature certifying that this message is associated with the state hash
+                  li
+                    strong version_sign:
+                    | &nbsp;version of digital signature algorithm
+                  li
+                    strong version_encrypt:
+                    | &nbsp;version of encryption algorithm, undefined if not encrypted
+                  li
+                    strong dtg:
+                    | &nbsp;timestamp of memo creation
+                  li
+                    strong signing_address:
+                    | &nbsp;Nano address associated with hash who created and signed the memo
+                  li
+                    strong decrypting_address:
+                    | &nbsp;Nano address for which the message has been encrypted. Only the decypring address' private key can decrypt and read the message, undefined if not encrypted
+                  li
+                    strong is_encrypted:
+                    | &nbsp;Boolean true if memo is encrypted, false if memo is not encrypted

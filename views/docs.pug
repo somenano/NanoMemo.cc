@@ -4,11 +4,18 @@ block content
   
   div(class="pricing-header px-3 py-3 pt-md-5 pb-md-4 mx-auto text-center")
     h1(class="display-4") Documentation
-    p(class="lead") We have multiple sources of documentation depending on which library you are using. Need help sorting it our?&nbsp;
+    p(class="lead") Learn about how NanoMemo works or how to integrate it with your project. Below you will find both&nbsp;
+      a(href="#developer-documentation") developer documentation
+      | &nbsp;and&nbsp;
+      a(href="#faq") frequently asked questions
+      | . Have a question not answered here?&nbsp;
       a(href="/contact") Contact us
-      | &nbsp;and we will hopefully help shed some light.
+      | .
 
   div(class="container")
+    div(id="developer-documentation")
+      h3 Developer Documentation
+
     div(class="card-deck mb-3 text-center")
 
       div(class="card mb-4 box-shadow")
@@ -20,7 +27,7 @@ block content
             li
               a(href="https://www.npmjs.com/package/nanomemotools")
                 img(src="https://img.shields.io/npm/v/nanomemotools.svg") 
-          a(href="https://somenano.github.io/NanoMemoTools" role="button" class="btn btn-lg btn-block btn-outline-primary") Documentation
+          a(href="https://www.npmjs.com/package/nanomemotools" target="_new" role="button" class="btn btn-lg btn-block btn-outline-primary") Documentation
 
       div(class="card mb-4 box-shadow")
         div(class="card-header")
@@ -29,3 +36,187 @@ block content
           ul(class="list-unstyled mt-3 mb-4")
             li No matter your platform, you can interact with NanoMemo via a RESTful API to get existing memos and save new memos.
           a(href="/docs/api" role="button" class="btn btn-lg btn-block btn-outline-primary") Documentation
+
+    hr(width="50%" class="my-5")
+
+    div(id="faq")
+      h3 Frequently Asked Questions
+
+      p
+        ul
+          li
+            a(href="#what-is-nanomemo") What is NanoMemo?
+          li
+            a(href="#how-do-i-read-a-memo") How do I read a memo?
+          li
+            a(href="#how-do-i-write-a-memo") How do I write a memo?
+          li
+            a(href="#how-does-nanomemo-work") How does NanoMemo work?
+          li
+            a(href="#is-nanomemo-safe") Is NanoMemo safe?
+          li
+            a(href="#is-nanomemo-decentralized") Is NanoMemo decentralized?
+
+      hr(width="50%" class="my-5")
+
+      h5(id="what-is-nanomemo")
+        a(href="#what-is-nanomemo" class="link-muted")
+          i(class="bi bi-link-45deg")
+        | &nbsp;What is NanoMemo?
+      p(id="what-is-nanomemo-answer")
+        p Let's start by answering, what is&nbsp;
+          a(href="https://nano.org" target="_new") Nano
+          | ? Nano is a secure/decentralized, fast, and feeless cryptocurrency. It is digital cash in, arguably, its most efficient form. Nano prides itself in doing one thing and one thing well, fast/feeless/secure peer-to-peer transfer of value. In order to do value transfer well, the Nano protocol must be extremely efficient. This means that the data contained in a Nano Block is kept minimal.
+        p
+          | And to that point, a freetext memo field (a descriptor of why the Block was created) does not exist.
+        p NanoMemo looks to fill people/service's desire for a freetext memo field attached to a Nano Block. NanoMemo allows anyone that creates a Nano Block (makes a transaction with Nano) to write a memo and digitally sign it so that anyone can prove that the entity that created the Nano Block also wrote the memo. Additionally, NanoMemo offers a private memo option that encrypts a memo so that only a specified Nano Account can decrypt and read the memo's message.
+
+      hr(width="50%" class="my-5")
+
+      h5(id="how-do-i-read-a-memo")
+        a(href="#how-do-i-read-a-memo" class="link-muted")
+          i(class="bi bi-link-45deg")
+        | &nbsp;How do I read a memo?
+      p(id="how-do-i-read-a-memo-answer")
+        p To read a memo for a specific Nano Block, all you need to know is the Nano Block's hash. This is a unique identifier for each Nano Block on the Nano Network. Once you have the hash, simply enter it into the search box at the top of this website and hit enter.
+        p If a memo has been written for that block, you will see the message. If the memo has been encrypted, you will see ciphertext and have the option to enter your private key to decrypt the message if you were the intended recipient.
+        p If no memo has been written, you will only see the details of the Nano Block. If the Nano Block is yours, there will be a link to write and save a memo for that Nano Block.
+        p
+          strong Example Memos
+        ul
+          li
+            a(href="/block/6E3FD6E599E580FF631AF81477DB72A766D0740F6D81A0DE68F69035CE71D5DD") Not encrypted memo
+          li
+            a(href="/block/380D33BD7338C4FC600001FA0907778F2491C92C1B9C247EDF77D7FAEE4D0A6A") Encrypted memo
+        p
+          strong Developers
+        p If you are a developer, you can request memos through the&nbsp;
+          a(href="/api" target="_new") API
+          | . Three options:
+          ul
+            li
+              | NanoMemoTools Javascript
+              | (&nbsp;
+              a(href="https://www.npmjs.com/package/nanomemotools" target="_new") npm
+              | &nbsp;|&nbsp;
+              a(href="https://somenano.github.io/NanoMemoTools/module-NanoMemoTools_server.html#~getMemo" target="_new") docs
+              | &nbsp;|&nbsp;
+              a(href="https://github.com/somenano/NanoMemoTools#get-memo-from-server" target="_new") example get memo
+              | &nbsp;)
+            li
+              a(href="/docs/api#hash") RESTful API endpoint
+            li
+              a(href="/docs/api#websocket") WebSocket message for each new memo
+      
+      hr(width="50%" class="my-5")
+
+      h5(id="how-do-i-write-a-memo")
+        a(href="#how-do-i-write-a-memo" class="link-muted")
+          i(class="bi bi-link-45deg")
+        | &nbsp;How do I write a memo?
+      p(id="how-do-i-write-a-memo-answer")
+        p To write a memo, you must have the private key for the Nano Block with which you want to associate your memo. This ensures the authenticity of a memo is inline with its corresponding Nano Block.
+        p On this website you can go to&nbsp;
+          a(href="/write") Write Memo
+          | &nbsp;to manually write a memo. On that page you will also be given the option to encrypt the memo and set what Nano Account will be able to decrypt and read the memo.
+        p
+          strong Developers
+        p If you are a developer, you can write memos through the&nbsp;
+          a(href="/api" target="_new") API
+          | . Two options:
+          ul
+            li
+              | NanoMemoTools Javascript
+              | (&nbsp;
+              a(href="https://www.npmjs.com/package/nanomemotools" target="_new") npm
+              | &nbsp;|&nbsp;
+              a(href="https://somenano.github.io/NanoMemoTools/module-NanoMemoTools_server.html#~saveMemo" target="_new") docs
+              | &nbsp;|&nbsp;
+              a(href="https://github.com/somenano/NanoMemoTools#create-a-plaintext-memo" target="_new") example plaintext
+              | &nbsp;|&nbsp;
+              a(href="https://github.com/somenano/NanoMemoTools#create-an-encrypted-memo" target="_new") example encrypted
+              | &nbsp;|&nbsp;
+              a(href="https://github.com/somenano/NanoMemoTools#save-memo-to-server" target="_new") example save to server
+              | &nbsp;).
+            li
+              a(href="/docs/api#save") RESTful API endpoint
+
+      hr(width="50%" class="my-5")
+
+      h5(id="how-does-nanomemo-work")
+        a(href="#how-does-nanomemo-work" class="link-muted")
+          i(class="bi bi-link-45deg")
+        | &nbsp;How does NanoMemo work?
+      p(id="how-does-nanomemo-work-answer")
+        p
+          strong Memo Integrity - Digital Signature
+        p NanoMemo uses the exact same digital signature algorithm that Nano Currency uses when signing Nano Blocks.
+        p A digital signature is a mathematical scheme for verifying the authenticity of digital messages or documents. A valid digital signature, where the prerequisites are satisfied, gives a recipient very strong reason to believe that the message was created by a known sender (authentication), and that the message was not altered in transit (integrity). --&nbsp;
+          a(href="https://en.wikipedia.org/wiki/Digital_signature" target="_new") thanks wikipedia
+          | .
+        p In a NanoMemo, the hash of the corresponding Nano Block is appended to a written message and signed with a Nano Account's private key. The signing Nano Account's public key is derived from the private key, so the memo can verify it is being signed with the same private key that signed the Nano Block.
+        p Once a NanoMemo is signed, anyone with the Nano Account's public key can verify the memos integrity (to include authenticity). And the beauty of the Nano Network is that it acts as public key infrastructure. A Nano Account's public key can be derived from its address (and vice versa).
+        p
+          strong Memo Confidentiality - Encrypted Message
+        p NanoMemo uses public key encryption to encrypt messages and create an encrypted memo. Referencing the same public and private keys that are used in the signing of the memo, we convert the keys from a Ed25519 signing key pair into Curve25519 key pair suitable for Diffie-Hellman key exchange.
+        p In this type of encryption, a recipient must be known. In NanoMemo, you must specify what Nano Address is the recipient of your encrtyped memo. It can be any Nano Account, even if they are not associated with the corresponding Nano Block.
+        p Once a NanoMemo is encrypted, only someone or something in possession of the decrypting addresses private key will be able to decrypt the message.
+        p And it is worth mentioning that an encrypted memo's digital signature is calculated from the cipher text, not the decrypted plaintext.
+
+      hr(width="50%" class="my-5")
+
+      h5(id="is-nanomemo-safe")
+        a(href="#is-nanomemo-safe" class="link-muted")
+          i(class="bi bi-link-45deg")
+        | &nbsp;Is NanoMemo Safe?
+      p(id="is-nanomemo-safe-answer")
+        p Here we want to be very clear and transparent.
+        p NanoMemo uses various third-party libraries, which we will highlight below, but NanoMemo itself has not been audited for security of encryption or digital signing algorithms.
+        p Before we review the libraries, I want to emphasize that NanoMemo will never send your private keys or seeds over a network connection. In fact, we never save those values to any persistent browser storage either. Any time a private key is needed to sign or decyrypt a memo (actions that take place on the client side, not server side), the private is requested, never stored.
+        p
+          strong Dependent Libraries
+        p
+          ul
+            li
+              strong
+                a(href="https://github.com/marvinroger/nanocurrency-js/" target="_new") nanocurrency-js
+              | &nbsp;- Used for key derivations and input validation.
+            li
+              strong
+                a(href="https://github.com/dvdbng/tweetnacl-blake2b-js" target="_new") tweetnacl-blake2b-js
+              | &nbsp;- Used to sign, verify signatures, encrypt, and decrypt memos. Info on audits&nbsp;
+              a(href="https://github.com/dvdbng/tweetnacl-blake2b-js#audits" target="_new") here
+              | .
+            li
+              strong
+                a(href="https://github.com/dcposch/blakejs" target="_new") blakejs
+              | &nbsp;- Used for hasing.
+            li
+              strong
+                a(href="https://github.com/dchest/ed2curve-js" target="_new") ed2curve-js
+                | &nbsp;(modified)
+              | &nbsp;- Modified and locally included to use tweetnacl-blake2b instead of tweetnacl; Used to convert from signing keys (Ed25519) to encryption keys (Curve25519).
+            li
+              strong
+                a(href="https://github.com/axios/axios" target="_new") axios
+              | &nbsp;- Used for network requests.
+            li
+              strong
+                a(href="https://github.com/pladaria/reconnecting-websocket" target="_new") reconnecting-websocket
+              | &nbsp;- Used for client websockets.
+            li
+              strong
+                a(href="https://github.com/websockets/ws" target="_new") ws
+              | &nbsp;- Used for client and server websockets.
+
+      hr(width="50%" class="my-5")
+
+      h5(id="is-nanomemo-decentralized")
+        a(href="#is-nanomemo-decentralized" class="link-muted")
+          i(class="bi bi-link-45deg")
+        | &nbsp;Is NanoMemo Decentralized?
+      p(id="is-nanomemo-decentralized-answer")
+        p No, NanoMemo is not decentralized. However, at this point we believe it does not need to be decentralized. In cyber security we speak of Confidentiality, Integrity, and Availability. NanoMemo offers condientiality through encrypted memos. NanoMemo offers integrity through digital signatures on memos. We, however, do not offer availability if the NanoMemo server goes away. Decentralized sharing of memos would require a lot of network and resource overhead. However, availability of a memo (not the NanoMemo server) exists as you can simply make copies of the memos saved at NanoMemo.cc. Because of the digital signatures and potential encryption, anyone can store a NanoMemo and its authenticity still be proven.
+        p On the topic of Nano Blocks (decentralized availability) containing a data field, here is Nano creaor Colin LeMahieu:
+        p
+          iframe(id="reddit-embed" src="https://www.redditmedia.com/r/nanocurrency/comments/l6fl31/unique_payment_id_via_payment_protocol_discussion/gl2qff9/?depth=1&amp;showmore=false&amp;embed=true" sandbox="allow-scripts allow-same-origin allow-popups" height="276" width="640" scrolling="no")

@@ -145,7 +145,7 @@ wss.on('close', function close() {
 
 const wss_disseminate = function(memo) {
   const data = {
-    dtg: new Date(),
+    dtg: memo.dtg,
     hash: memo.hash,
     message: memo.message,
     signing_address: memo.signing_address,
