@@ -38,7 +38,7 @@ block content
         div(class="card mb-4 box-shadow")
           div(class="card-body")
             h5(class="card-title") !{(recent_memo.is_encrypted ? '<i class="bi bi-lock-fill text-danger" title="Message is encrypted"></i> Encrypted Memo' : 'Memo')}
-            h6(class="card-subtitle mb-2 text-muted") #{new Date(recent_memo.dtg).toLocaleString()}
+            h6(class="card-subtitle mb-2 text-muted date-to-local") #{recent_memo.dtg}
             p(class="card-text")
               i #{recent_memo.message}
             a(href="/block/"+recent_memo.hash class="card-link") Details

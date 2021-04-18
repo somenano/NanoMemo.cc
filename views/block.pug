@@ -68,8 +68,8 @@ block content
                     i(class="bi bi-lock-fill text-danger" title="Message is encrypted")
               td(class="message" style="word-break:break-word;") #{memo.message}
             tr
-              td Timestamp
-              td(style="word-break:break-all;") #{(new Date(memo.dtg)).toLocaleString()}
+              td Local Timestamp
+              td(style="word-break:break-all;" class="date-to-local") #{memo.dtg}
             tr
               td Hash Reference
               td(style="word-break:break-all;") #{memo.hash}
