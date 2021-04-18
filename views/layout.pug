@@ -1,0 +1,120 @@
+doctype html
+html(lang="en")
+  head
+    title= title
+
+    meta(name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no")
+
+    link(rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css" integrity="sha384-B0vP5xmATw1+K9KRQjQERJvTumQW0nPEzvF6L/Z6nronJ3oUOFUFpCjEUQouq2+l" crossorigin="anonymous")
+    link(rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css")
+    link(rel='stylesheet', href='/stylesheets/style.css')
+
+    link(rel="apple-touch-icon" sizes="57x57" href="/apple-icon-57x57.png")
+    link(rel="apple-touch-icon" sizes="60x60" href="/apple-icon-60x60.png")
+    link(rel="apple-touch-icon" sizes="72x72" href="/apple-icon-72x72.png")
+    link(rel="apple-touch-icon" sizes="76x76" href="/apple-icon-76x76.png")
+    link(rel="apple-touch-icon" sizes="114x114" href="/apple-icon-114x114.png")
+    link(rel="apple-touch-icon" sizes="120x120" href="/apple-icon-120x120.png")
+    link(rel="apple-touch-icon" sizes="144x144" href="/apple-icon-144x144.png")
+    link(rel="apple-touch-icon" sizes="152x152" href="/apple-icon-152x152.png")
+    link(rel="apple-touch-icon" sizes="180x180" href="/apple-icon-180x180.png")
+    link(rel="icon" type="image/png" sizes="192x192"  href="/android-icon-192x192.png")
+    link(rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png")
+    link(rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png")
+    link(rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png")
+    link(rel="manifest" href="/manifest.json")
+    meta(name="msapplication-TileColor" content="#ffffff")
+    meta(name="msapplication-TileImage" content="/ms-icon-144x144.png")
+    meta(name="theme-color" content="#ffffff")
+
+  body
+
+    nav(class="navbar navbar-expand-md navbar-light bg-white shadow-sm")
+      a(class="navbar-brand" href="/") NanoMemo
+      button(class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation")
+        span(class="navbar-toggler-icon")
+
+      div(class="collapse navbar-collapse" id="navbarSupportedContent")
+        ul(class="navbar-nav mr-auto")
+          li(class="nav-item"+(page == 'write' ? ' active' : ''))
+            a(class="nav-link" href="/write") Write Memo
+              if page == 'write'
+                span(class="sr-only") (current)
+          li(class="nav-item"+(page == 'api' ? ' active' : ''))
+            a(class="nav-link" href="/api") API
+          li(class="nav-item dropdown"+(page == 'tools' ? ' active' : ''))
+            a(class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false")
+              | Tools
+            div(class="dropdown-menu" aria-labelledby="navbarDropdown")
+              a(class="dropdown-item" href="/tools/memo-validator") Memo Validator
+              //- a(class="dropdown-item" href="/tools/block-validator") Nano Block Validator
+              a(class="dropdown-item" href="/tools/key-derivations") Seed/Key/Address Derivations
+          li(class="nav-item"+(page == 'docs' ? ' active' : ''))
+            a(class="nav-link" href="/docs") Docs
+        form(id="formSearch" class="form-inline my-2 my-lg-0" onsubmit="return goHash();")
+          input(id="inputSearchHash" class="form-control mr-sm-2" type="search" placeholder="Block Hash" aria-label="Block Hash" required pattern="[a-fA-F0-9]{64}" title="64-character hexadecimal string")
+          button(class="btn btn-outline-primary my-2 my-sm-0" type="button" onclick="goHash();") Go
+
+      
+    block content
+
+    footer(class="pt-4 my-md-5 pt-md-5 mr-0 border-top")
+      div(class="row")
+        div(class="col-12 col-md")
+          img(class="mb-2" src="/images/logo_1024.png" alt="" width="24" height="24")
+          small(class="d-block mb-3 text-muted") © 2021
+
+      div(class="row")
+        div(class="col-6 col-md")
+          h5
+            | Features
+          ul(class="list-unstyled text-small")
+            li
+              a(class="text-muted" href="/write") Write Memo
+            li
+              a(class="text-muted" href="https://www.npmjs.com/package/nanomemotools" target="_new") NanoMemoTools on npm
+            li
+              a(class="text-muted" href="/docs") NanoMemo API docs
+
+        div(class="col-6 col-md")
+          h5
+            | Resources
+          ul(class="list-unstyled text-small")
+            li
+              a(class="text-muted" href="https://nano.org" target="_new") Nano.org
+            li
+              a(class="text-muted" href="https://reddit.com/r/nanocurrency" target="_new") Nano Subreddit
+            li
+              a(class="text-muted" href="https://nanowallets.guide/" target="_new") Nano Wallets Guide
+
+        div(class="col-6 col-md")
+          h5 About
+          ul(class="list-unstyled text-small")
+            li
+              a(class="text-muted" href="https://somenano.com" target="_new") SomeNano
+            li
+              a(class="text-muted" href="/contact") Contact Us
+            li
+              a(class="text-muted" href="/tos") Terms of Service
+            li
+              a(class="text-muted" href="https://github.com/somenano/NanoMemo.cc" target="_new") Open Source
+
+    script(src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous")
+    script(src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-Piv4xVNRyMGpqkS2by6br4gNJ7DXjqk09RmUpJ8jgGtD7zP9yug3goQfGII0yAns" crossorigin="anonymous")
+    script(src="/javascripts/nanomemotools.js")
+    script(src="/javascripts/index.js")
+
+    script.
+      function goHash() {
+        const form = $('#formSearch');
+        form.addClass('was-validated');
+        if (form[0].checkValidity() == false) {
+          return;
+        }
+        const hash = $('#inputSearchHash').val();
+        window.location.href = "#{url}/block/" + hash;
+
+        return false;
+      }
+
+    block end_of_body

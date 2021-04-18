@@ -1,0 +1,114 @@
+extends layout
+
+block content
+  
+  div(class="pricing-header px-3 py-3 pt-md-5 pb-md-4 mx-auto text-center")
+    h1(class="display-4") Seed/Key/Address Derivations
+    p(class="lead") This form will derive Private Keys, Public Keys, and Addresses from each other or from a seed and index. Enter one field and click "Derive", and values that are able to be derived from your input will be shown. All actions are offline and no data is sent to the server.
+
+    div(class="container")
+
+    form(id="formDerivation")
+
+      div(class="form-group")
+        label(for="inputSeed") Seed
+        input(type="text" class="form-control" id="inputSeed" name="inputSeed" maxlength="64"  pattern="[a-fA-F0-9]{64}" title="64-character hexadecimal string")
+        div(class="invalid-feedback") Invalid seed, must be hex string 64 characters in length
+
+      div(class="form-group")
+        label(for="inputIndex") Index
+        input(type="number" class="form-control" id="inputIndex" name="inputIndex" title="Numeric value" min="0")
+        div(class="invalid-feedback") Invalid index, must be numeric value with no decimal
+
+      div(class="form-group")
+        label(for="inputPrivateKey") Secret Key
+        input(type="text" class="form-control" id="inputPrivateKey" name="inputPrivateKey" maxlength="64"  pattern="[a-fA-F0-9]{64}" title="64-character hexadecimal string")
+        div(class="invalid-feedback") Invalid secret key, must be hex string 64 characters in length
+
+      div(class="form-group")
+        label(for="inputPublicKey") Public Key
+        input(type="text" class="form-control" id="inputPublicKey" name="inputPublicKey" maxlength="64"  pattern="[a-fA-F0-9]{64}" title="64-character hexadecimal string")
+        div(class="invalid-feedback") Invalid public key, must be hex string 64 characters in length
+
+      div(class="form-group")
+        label(for="inputAddress") Nano Address
+        input(type="text" class="form-control" id="inputAddress" name="inputAddress" pattern="^(nano|xrb)_[13]{1}[13456789abcdefghijkmnopqrstuwxyz]{59}$" title="Nano Address")
+        div(class="invalid-feedback") Invalid address
+
+      button(type="button" class="btn btn-primary" onclick="derive();") Derive
+
+block end_of_body
+
+  script.
+    function derive() {
+      // Validate inputs
+      const form = $('#formDerivation');
+      form.addClass('was-validated');
+      if (form[0].checkValidity() == false) {
+        return;
+      }
+
+      const seed = $('#inputSeed').val();
+      if (seed != '' && $('#inputIndex').val() == '') {
+        alert('If deriving from a seed, an Index value is required.');
+        return;
+      }
+      const index = Number($('#inputIndex').val());
+      let private_key = $('#inputPrivateKey').val();
+      let public_key = $('#inputPublicKey').val();
+      let address = $('#inputAddress').val();
+
+      if (seed != '' && isNaN(index)) {
+        alert('If deriving from a seed, an Index value is required.');
+        return;
+      }
+
+      if (seed != '' && !isNaN(index)) {
+        try {
+          private_key = NanoMemoTools.tools.getPrivateKey(seed, index);
+        } catch(e) {
+          console.error('An error occured while attempting to derive a private_key from a seed/index pair.');
+          console.error(e);
+          alert('An error occured while attempting to derive a private_key from a seed/index pair.');
+          return;
+        }
+      }
+
+      if (private_key != '') {
+        try {
+          public_key = NanoMemoTools.tools.getPublicKeyFromPrivateKey(private_key);
+          address = NanoMemoTools.tools.getAddress(public_key);
+        } catch(e) {
+          console.error('An error occured while attempting to derive a public_key from a private_key.');
+          console.error(e);
+          alert('An error occured while attempting to derive a public_key from a private_key.');
+          return;
+        }
+      }
+
+      if (public_key != '') {
+        try {
+          address = NanoMemoTools.tools.getAddress(public_key);
+        } catch(e) {
+          console.error('An error occured while attempting to derive an address from a public_key.');
+          console.error(e);
+          alert('An error occured while attempting to derive an address from a public_key.');
+          return;
+        }
+      }
+
+      if (address != '') {
+        try {
+          public_key = NanoMemoTools.tools.getPublicKeyFromAddress(address);
+        } catch(e) {
+          console.error('An error occured while attempting to derive a public_key from an address.');
+          console.error(e);
+          alert('An error occured while attempting to derive a public_key from an address.');
+          return;
+        }
+      }
+
+      $('#inputPrivateKey').val(private_key);
+      $('#inputPublicKey').val(public_key);
+      $('#inputAddress').val(address);
+    }

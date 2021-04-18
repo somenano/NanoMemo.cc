@@ -1,0 +1,31 @@
+extends layout
+
+block content
+  
+  div(class="pricing-header px-3 py-3 pt-md-5 pb-md-4 mx-auto text-center")
+    h1(class="display-4") Documentation
+    p(class="lead") We have multiple sources of documentation depending on which library you are using. Need help sorting it our?&nbsp;
+      a(href="/contact") Contact us
+      | &nbsp;and we will hopefully help shed some light.
+
+  div(class="container")
+    div(class="card-deck mb-3 text-center")
+
+      div(class="card mb-4 box-shadow")
+        div(class="card-header")
+          h4(class="my-0 font-weight-normal") NanoMemoTools
+        div(class="card-body")
+          ul(class="list-unstyled mt-3 mb-4")
+            li If you want to integrate NanoMemo into a web or javascript project, this library will provide you all the functionality you need.
+            li
+              a(href="https://www.npmjs.com/package/nanomemotools")
+                img(src="https://img.shields.io/npm/v/nanomemotools.svg") 
+          a(href="https://somenano.github.io/NanoMemoTools" role="button" class="btn btn-lg btn-block btn-outline-primary") Documentation
+
+      div(class="card mb-4 box-shadow")
+        div(class="card-header")
+          h4(class="my-0 font-weight-normal") RESTful API
+        div(class="card-body")
+          ul(class="list-unstyled mt-3 mb-4")
+            li No matter your platform, you can interact with NanoMemo via a RESTful API to get existing memos and save new memos.
+          a(href="/docs/api" role="button" class="btn btn-lg btn-block btn-outline-primary") Documentation

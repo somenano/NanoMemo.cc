@@ -1,0 +1,210 @@
+extends layout
+
+block content
+  
+  div(class="pricing-header px-3 py-3 pt-md-5 pb-md-4 mx-auto text-center")
+    h1(class="display-4") Write Memo
+    p(class="lead") Write a memo without needing your own API key. Please know that this form requests highly sensitive information like your Nano Account's&nbsp;
+      span(class="text-danger") secret key
+      | . It is used only in your browser to sign your memo and never sent to the server. That said, always be highly cautious and highly suspicious of anyone or anything asking for your&nbsp;
+      span(class="text-danger") secret key
+      | .
+
+  div(class="container")
+
+    form(id="formMemo")
+
+      div(class="form-group")
+        label(for="inputHash") Nano Block Hash
+        input(value=""+(hash === undefined ? '' : hash) type="text" class="form-control" id="inputHash" name="inputHash" maxlength="64" required pattern="[a-fA-F0-9]{64}" title="64-character hexadecimal string")
+        div(class="invalid-feedback") Invalid hash, must be hex string 64 characters in length
+
+      div(class="form-group")
+        label(for="inputMessage") Message
+        textarea(class="form-control" id="inputMessage" name="inputMessage" maxlength=""+message_max_length required) #{(message === undefined ? '' : message)}
+        small(id="messageHelp" class="form-text text-muted") Message max length: #{message_max_length} characters for non-Private messages and #{(message_max_length / 2) - 16} for Private messages
+        div(class="invalid-feedback") Invalid message, must be between 1 and #{message_max_length} characters for non-Private messages and between 1 and #{(message_max_length / 2) - 16} for Private messages.
+
+      div(class="form-group")
+        label(for="inputPrivateKey") Nano Account&nbsp;
+          span(class="text-danger") Secret Key
+        input(type="password" class="form-control" id="inputPrivateKey" name="inputPrivateKey" maxlength="64" required  pattern="[a-fA-F0-9]{64}" title="64-character hexadecimal string")
+        small(id="privateKeyHelp" class="form-text text-muted") Your&nbsp;
+          span(class="text-danger") secret key
+          | &nbsp;is used in the browser to sign your memo and never sent to the server
+        div(class="invalid-feedback") Invalid hash, must be hex string 64 characters in length
+
+    form(id="formEncrypted")
+
+      div(class="form-group")
+        div(class="form-check")
+          input(class="form-check-input" type="checkbox" value="" id="inputCheckEncrypted" onclick="togglePrivateMemo();")
+          label(class="form-check-label" for="inputCheckEncrypted") Make memo private?
+
+      div(id="divDecryptingAddress" class="form-group d-none")
+        label(for="inputDecryptingAddress") Decrypting Nano Address
+        input(value=""+(decrypting_address === undefined ? '' : decrypting_address) type="text" class="form-control" id="inputDecryptingAddress" name="inputDecryptingAddress" required  pattern="^(nano|xrb)_[13]{1}[13456789abcdefghijkmnopqrstuwxyz]{59}$" title="Nano Address")
+        small(id="decryptingAddressHelp" class="form-text text-muted") Only someone with the secret key to this Nano Address will be able to decrypt and view the memo.
+        div(class="invalid-feedback") Invalid Nano Address
+
+      button(type="button" class="btn btn-primary" onclick="signMemo(true);") Step 1: Sign Memo
+
+      div(class="mt-3")
+        pre(class="bg-secondary text-white")
+          code(id="post_request")
+
+    script(src="https://www.google.com/recaptcha/api.js" async defer)
+
+    form(id="formSave")
+
+      div(class="g-recaptcha" data-sitekey=""+recaptcha_site_key)
+
+      div(class="form-group")
+        div(class="form-check")
+          input(class="form-check-input" type="checkbox" value="" id="inputTOS" required)
+          label(class="form-check-label" for="inputTOS") Agree to&nbsp;
+            a(href="/tos" target="_new") terms and conditions
+          div(class="invalid-feedback") You must agree before saving the memo to the NanoMemo.cc server
+
+      button(type="button" id="buttonSave" class="btn btn-primary" onclick="saveMemo();" disabled) Step 2: Save Memo
+
+
+block end_of_body
+
+  script.
+
+    function togglePrivateMemo() {
+      const checked = $('#inputCheckEncrypted')[0].checked;
+      if (checked) {
+        $('#divDecryptingAddress').removeClass('d-none');
+        $('#inputMessage').attr('maxlength', #{(message_max_length / 2) - 16});
+      } else {
+        $('#divDecryptingAddress').addClass('d-none');
+        $('#inputMessage').attr('maxlength', #{message_max_length});
+      }
+    }
+
+    function signMemo(warn=false) {
+      const form = $('#formMemo');
+      form.addClass('was-validated');
+      if (form[0].checkValidity() == false) {
+        $('#post_request').text('');
+        $('#buttonSave').prop('disabled', true);
+        return;
+      }
+      
+      const message = $('#inputMessage').val();
+      const hash = $('#inputHash').val();
+      const signing_private_key = $('#inputPrivateKey').val();
+      const signing_public_key = NanoMemoTools.tools.getPublicKeyFromPrivateKey(signing_private_key);
+      const signing_address = NanoMemoTools.tools.getAddress(signing_public_key);
+
+      let memo = new NanoMemoTools.memo.Memo(
+        hash,
+        message,
+        signing_address,
+        undefined,  // signature
+        NanoMemoTools.version.sign
+      )
+
+      // Check if private
+      if ($('#inputCheckEncrypted')[0].checked) {
+        const formEncrypted = $('#formEncrypted');
+        formEncrypted.addClass('was-validated');
+        if (formEncrypted[0].checkValidity() == false) {
+          $('#post_request').text('');
+          $('#buttonSave').prop('disabled', true);
+          return;
+        }
+
+        try {
+          const decrypting_address = $('#inputDecryptingAddress').val();
+
+          memo = NanoMemoTools.memo.encrypt(
+            memo,
+            signing_private_key,
+            decrypting_address,
+            NanoMemoTools.version.encrypt
+          );
+
+        } catch(e) {
+          $('#post_request').text('');
+          $('#buttonSave').prop('disabled', true);
+          console.error(e);
+          alert('Error encrypting message');
+          return;
+        }
+      }
+
+      // Sign memo and update display
+      memo.sign(signing_private_key);
+      if (!memo.valid_signature) {
+        console.error('Unable to sign memo');
+        alert('Unable to sign memo');
+        $('#post_request').text('');
+        $('#buttonSave').prop('disabled', true);
+        return;
+      }
+
+      // Create output
+      const request = `POST #{url}/api/memo/new
+    {
+      api_key: -------------,
+      api_secret: -----------------------,
+      message: "`+ memo.message +`",
+      hash: "`+ memo.hash +`",
+      signature: "`+ memo.signature +`",
+      signing_address: "`+ memo.signing_address +`",
+      decrypting_address: "`+ memo.decrypting_address +`",
+      version_sign: `+ memo.version_sign +`,
+      version_encrypt: `+ memo.version_encrypt +`
+    }
+    `;
+      $('#post_request').text(request);
+
+      $('#buttonSave').prop('disabled', false);
+
+      if (warn) {
+        const regex = new RegExp('^[a-fA-F0-9]{64}$');
+        if (regex.test(memo.message)) {
+          alert('Caution, your message looks like a seed or private key. Double check your inputs before saving.')
+        }
+      }
+
+      return memo;
+    }
+
+    async function saveMemo() {
+      const memo = signMemo();
+      if (!memo) return;
+
+      const recaptcha_token = grecaptcha.getResponse();
+      
+      if (!recaptcha_token || recaptcha_token.length == 0) {
+        console.error('reCAPTCHA token not found');
+        alert('Please complete reCAPTCHA to save memo');
+        return;
+      };
+
+      if (!$('#inputTOS')[0].checked) {
+        alert('You must accept the Terms of Service to save a memo');
+        return;
+      }
+
+      const data = {
+        memo: memo,
+        recaptcha_token: recaptcha_token
+      }
+
+      const response = await NanoMemoTools.network.post('#{url}/write/submit', data);
+
+      if (response.success) {
+        window.location.href = "#{url}/block/" + response.data.hash;
+        return;
+      } else {
+        console.error(response);
+        alert(response.error);
+        return;
+      }
+
+    }

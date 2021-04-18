@@ -1,0 +1,46 @@
+extends layout
+
+block content
+  
+  div(class="pricing-header px-3 py-3 pt-md-5 pb-md-4 mx-auto text-center")
+    h1(class="display-4") API
+    p(class="lead") Want to integrate NanoMemo.cc into your app, website, or service?
+
+  div(class="container")
+    div(class="card-deck mb-3 text-center")
+
+      div(class="card mb-4 box-shadow")
+        div(class="card-header")
+          h4(class="my-0 font-weight-normal") Free
+        div(class="card-body")
+          h1(class="card-title pricing-card-title") ∞
+            small(class="text-muted") &nbsp;/ day
+          ul(class="list-unstyled mt-3 mb-4")
+            li NanoMemoTools package
+            li NanoMemo.cc memo requests
+            li RESTful API Documentation
+            li Example code
+          a(href="/docs" role="button" class="btn btn-lg btn-block btn-outline-primary") View Documentation
+
+      div(class="card mb-4 box-shadow")
+        div(class="card-header")
+          h4(class="my-0 font-weight-normal") Beta
+        div(class="card-body")
+          h1(class="card-title pricing-card-title") 0 Nano
+            small(class="text-muted") &nbsp;/ key
+          ul(class="list-unstyled mt-3 mb-4")
+            li Everything from the free plan
+            li #{user_daily_credits} memo saves / day
+            li User API credentials
+            li Automatic daily credits
+          a(href="/api/request" role="button" class="btn btn-lg btn-block btn-outline-primary") Request API Key
+
+      div(class="card mb-4 box-shadow")
+        div(class="card-header")
+          h4(class="my-0 font-weight-normal") Extra
+        div(class="card-body")
+          h1(class="card-title pricing-card-title") TBD
+            small(class="text-muted") &nbsp;/ request
+          ul(class="list-unstyled mt-3 mb-4")
+            li For services that might need more than the alloted daily credits, contact us with your request and we will hopefully work out a plan.
+          a(href="/contact" role="button" class="btn btn-lg btn-block btn-outline-primary") Contact Us

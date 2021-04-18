@@ -1,0 +1,33 @@
+{
+  "name": "nanomemo",
+  "version": "0.1.0",
+  "private": false,
+  "scripts": {
+    "start": "node ./bin/www"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/somenano/NanoMemo.cc.git"
+  },
+  "bugs": {
+    "url": "https://github.com/somenano/NanoMemo.cc/issues"
+  },
+  "homepage": "https://nanomemo.cc",
+  "author": "SomeNano",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^0.21.1",
+    "cookie-parser": "~1.4.4",
+    "debug": "~2.6.9",
+    "dotenv": "^8.2.0",
+    "express": "~4.16.1",
+    "http-errors": "~1.6.3",
+    "mongoose": "^5.12.4",
+    "mongoose-lean-virtuals": "^0.7.6",
+    "morgan": "~1.9.1",
+    "nanocurrency": "^2.5.0",
+    "nanomemotools": "^0.1.7",
+    "pug": "^3.0.2",
+    "ws": "^7.4.4"
+  }
+}

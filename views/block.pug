@@ -1,0 +1,174 @@
+extends layout
+
+block content
+  
+  div(class="pricing-header px-3 py-3 pt-md-5 pb-md-4 mx-auto text-center")
+    if memo
+      if !memo.is_encrypted
+        h1(class="display-4") Nano Block with Memo
+      else
+        h1(class="display4") Nano Block with Encrypted Memo
+    else
+      h1(class="display-4") Nano Block
+
+    if block === undefined
+      if NanoMemoTools.memo.validateHash(hash)
+        p(class="lead") Block not found on the Nano Network
+      else
+        p(class="lead") Invalid Block Hash
+
+    else
+
+      if memo
+        div(class="my-5 border shadow-sm p-3 bg-white rounded")
+          div(class="text-center")
+            span(class="pr-3 border-right text-muted small")
+              span(class="lock-icon")
+                if memo.is_encrypted
+                  i(class="bi bi-lock-fill text-danger" title="Message is encrypted")
+              | &nbsp;Message
+            span(class="pl-3 message" style="font-size:1.5em;"+ (!memo.is_encrypted ? " word-break:break-word;" : " word-break:break-all;")) #{memo.message}
+          if memo.is_encrypted
+            p(class="text-muted small mt-3" style="word-break:break-all;") recipient: #{memo.decrypting_address}
+            hr(width="50%")
+            form(id="formDecrypt")
+              div(class="form-group")
+                div(class="input-group")
+                  input(placeholder="recipient's secret key" type="password" class="form-control" id="inputPrivateKey" name="inputPrivateKey" maxlength="64" required  pattern="[a-fA-F0-9]{64}" title="64-character hexadecimal string")
+                  div(class="input-group-append")
+                    button(class="btn btn-outline-primary my-sm-0" type="button" onclick="decryptMessageDOM();") Decrypt
+                small(id="privateKeyHelp" class="form-text text-muted") This memo is encrypted. Enter the recipient's Nano Account's&nbsp;
+                  span(class="text-danger") secret key
+                  | &nbsp;to decrypt. The&nbsp;
+                  span(class="text-danger") secret key
+                  | &nbsp;is used in the browser to decrypt the memo and never sent to the server.
+                div(class="invalid-feedback") Invalid key, must be hex string 64 characters in length
+
+      else
+        p(class="lead text-muted" style="font-size:1em; word-break:break-all;") #{hash}
+
+  if block
+
+    div(class="container")
+
+      h5 Memo Details
+      if memo === undefined || memo === null
+        p(class="pl-2") No memo has been written for this block. If this is your block, you can&nbsp;
+          a(href="/write?hash="+hash) write a memo
+          | &nbsp;now.
+      else
+        table(class="table")
+          tbody
+            tr
+              td
+                | Message
+                br
+                span(class="lock-icon")
+                  if memo.is_encrypted
+                    i(class="bi bi-lock-fill text-danger" title="Message is encrypted")
+              td(class="message" style="word-break:break-word;") #{memo.message}
+            tr
+              td Timestamp
+              td(style="word-break:break-all;") #{(new Date(memo.dtg)).toLocaleString()}
+            tr
+              td Hash Reference
+              td(style="word-break:break-all;") #{memo.hash}
+            tr
+              td Signature
+                br
+                if memo.valid_signature
+                  a(href="/tools/memo-validator?hash="+memo.hash+"&message="+memo.message+"&signing_address="+memo.signing_address+"&signature="+memo.signature class="text-success")
+                    i(class="bi bi-person-check-fill")
+                    | &nbsp; Valid
+                else
+                  a(href="/tools/memo-validator?hash="+memo.hash+"&message="+memo.message+"&signing_address="+memo.signing_address+"&signature="+memo.signature class="text-danger")
+                    i(class="bi bi-person-x-fill")
+                    | &nbsp; Not valid
+              td(style="word-break:break-all;") #{memo.signature}
+            tr
+              td Encrypted Memo
+              td #{(!memo.is_encrypted ? 'No' : 'Yes')}
+            tr 
+                td Signing Address
+                td(style="word-break:break-all;") #{memo.signing_address}
+            if memo.decrypting_address
+              tr 
+                td Decrypting Address
+                td(style="word-break:break-all;") #{memo.decrypting_address}
+
+      h5 Nano Block Details
+      table(class="table")
+        tbody
+          //- tr
+          //-   td Timestamp
+          //-   td(style="word-break:break-all;") #{new Date(Number(block.local_timestamp)).toLocaleString()}
+          tr
+            td Hash 
+            td(style="word-break:break-all;") #{hash}
+          tr
+            td Account Address
+            td(style="word-break:break-all;") #{block.block_account}
+          tr
+            td Account Public Key
+            td(style="word-break:break-all;") #{NanoMemoTools.tools.getPublicKeyFromAddress(block.block_account)}
+          tr
+            td Subtype
+            td #{block.subtype}
+          tr
+            td Confirmed
+            td #{(block.confirmed ? 'Yes' : 'No')}
+          tr
+            td Amount
+            td(style="word-break:break-all;") #{NanoCurrency.convert(block.amount, { from: 'raw', to: 'Nano' })} Nano
+          tr
+            td Balance
+            td(style="word-break:break-all;") #{NanoCurrency.convert(block.balance, { from: 'raw', to: 'Nano' })} Nano
+          tr
+            td Signature
+            td(style="word-break:break-all;") #{block.contents.signature}
+          tr
+            td Block Explorers
+            td(style="word-break:break-word;")
+              a(href="https://nanocrawler.cc/explorer/block/"+hash target="_new") NanoCrawler
+              | &nbsp;-&nbsp;
+              a(href="https://nanolooker.com/block/"+hash target="_new") NanoLooker
+
+block end_of_body
+
+  if memo && memo.is_encrypted
+    script.
+      function decryptMessageDOM() {
+        const encrypted_memo = new NanoMemoTools.memo.EncryptedMemo(
+          "#{memo.hash}",
+          "#{memo.message}",
+          "#{memo.signing_address}",
+          "#{memo.decrypting_address}",
+          signature="#{memo.signature}",
+          version_sign="#{memo.version_sign}",
+          version_encrypt="#{memo.version_encrypt}"
+        )
+        //- const encrypted_message = "#{memo.message}";
+        //- const signing_address = "#{block.block_account}";
+        //- const signing_public_key = NanoMemoTools.tools.getPublicKeyFromAddress(signing_address);
+        //- const hash = "#{hash}";
+        const decrypting_private_key = $('#inputPrivateKey').val();
+        //- let message = undefined;
+        let memo = undefined;
+        try {
+          memo = NanoMemoTools.memo.decrypt(encrypted_memo, decrypting_private_key);
+          //- message = NanoMemoTools.tools.decryptMessage(encrypted_message, hash, signing_public_key, decrypting_private_key);
+        } catch(e) {
+          console.error('Error caught while attempting to decrypt the message');
+          console.error(e);
+          alert('Unable to decrypt message');
+          return;
+        }
+
+        $('.message').each(function() {
+          $(this).text(memo.message);
+        });
+
+        $('.lock-icon').each(function() {
+          $(this).html('<i class="bi bi-unlock-fill text-success" title="Message is not encrypted"></i>');
+        })
+      }

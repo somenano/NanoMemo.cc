@@ -1,0 +1,196 @@
+#!/usr/bin/env node
+
+/**
+ * Module dependencies.
+ */
+
+var app = require('../app');
+var debug = require('debug')('nanomemo:server');
+var http = require('http');
+
+/**
+ * Get port from environment and store in Express.
+ */
+
+var port = normalizePort(process.env.PORT || '3000');
+app.set('port', port);
+
+/**
+ * Create HTTP server.
+ */
+
+var server = http.createServer(app);
+
+/**
+ * Listen on provided port, on all network interfaces.
+ */
+
+server.listen(port);
+server.on('error', onError);
+server.on('listening', onListening);
+
+/**
+ * Normalize a port into a number, string, or false.
+ */
+
+function normalizePort(val) {
+  var port = parseInt(val, 10);
+
+  if (isNaN(port)) {
+    // named pipe
+    return val;
+  }
+
+  if (port >= 0) {
+    // port number
+    return port;
+  }
+
+  return false;
+}
+
+/**
+ * Event listener for HTTP server "error" event.
+ */
+
+function onError(error) {
+  if (error.syscall !== 'listen') {
+    throw error;
+  }
+
+  var bind = typeof port === 'string'
+    ? 'Pipe ' + port
+    : 'Port ' + port;
+
+  // handle specific listen errors with friendly messages
+  switch (error.code) {
+    case 'EACCES':
+      console.error(bind + ' requires elevated privileges');
+      process.exit(1);
+      break;
+    case 'EADDRINUSE':
+      console.error(bind + ' is already in use');
+      process.exit(1);
+      break;
+    default:
+      throw error;
+  }
+}
+
+/**
+ * Event listener for HTTP server "listening" event.
+ */
+
+function onListening() {
+  var addr = server.address();
+  var bind = typeof addr === 'string'
+    ? 'pipe ' + addr
+    : 'port ' + addr.port;
+  debug('Listening on ' + bind);
+}
+
+/**
+ * WebSocket Server
+ */
+
+const WS = require('ws');
+
+//////
+// WebSocket server setup
+function noop() {}
+
+function heartbeat() {
+  this.isAlive = true;
+}
+
+function parse_message(message) {
+  let action = undefined;
+  let topic = undefined;
+  try {
+    message = JSON.parse(message);
+    action = message.action;
+    topic = message.topic;
+  } catch (e) {
+    console.error('Error parsing message:');
+    console.error(message);
+    console.error(e);
+    return;
+  }
+  
+  if (action == 'subscribe') this.subscribe = true;
+  else if (action == 'unsubscribe') this.subscribe = false;
+}
+
+const wss = new WS.Server({ server });
+
+wss.on('connection', function connection(ws, req) {
+  console.log('connection detected');
+  ws.isAlive = true;
+  ws.on('pong', heartbeat);
+  ws.on('message', parse_message);
+});
+
+const interval = setInterval(function ping() {
+  wss.clients.forEach(function each(ws) {
+    if (ws.isAlive === false) return ws.terminate();
+
+    ws.isAlive = false;
+    ws.ping(noop);
+  });
+}, 30000);
+
+wss.on('close', function close() {
+  clearInterval(interval);
+});
+
+const wss_disseminate = function(memo) {
+  const data = {
+    dtg: new Date(),
+    hash: memo.hash,
+    message: memo.message,
+    signing_address: memo.signing_address,
+    decrypting_address: memo.decrypting_address,
+    signature: memo.signature,
+    version_sign: memo.version_sign,
+    version_encrypt: memo.version_encrypt,
+    is_encrypted: memo.is_encrypted,
+  }
+
+  wss.clients.forEach(function each(client) {
+    if (client.readyState === WS.OPEN && client.subscribe == true) {
+      client.send(JSON.stringify(data));
+    }
+  });
+}
+exports.wss_disseminate = wss_disseminate;
+
+// Refill user credits daily
+const DB = require('../helpers/db_query.js');
+const refillAPICredits = async function() {
+  const users = await DB.get_users_for_daily_credits().catch(function(e) {
+    console.error('In www.refillAPICredits an error was caught while running User.get_users_for_daily_credits()');
+    console.error(e);
+    return;
+  });
+  if (!users) return;
+
+  console.log('Daily credits: Found '+ users.length +' users that need their credits topped for the day');
+
+  for (let user of users) {
+    console.log('Daily credits: API '+ user.id +' had '+ user.credits +' credits. Refilling to '+ user.daily_credits);
+    user.credits = user.daily_credits;
+    user.daily_refill_needed = false;
+    await user.save().catch(function(e) {
+      console.error('In www.refillAPICredits an error was caught while running user.save()');
+      console.error(user);
+      console.error(e);
+    });
+  }
+}
+let now = new Date();
+let daily_credit_refresh = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0) - now;
+if (daily_credit_refresh < 0) {
+  daily_credit_refresh += 86400000; // it's after 0000, try 0000 tomorrow.
+}
+setTimeout(refillAPICredits, daily_credit_refresh);
+console.log('refillAPICredits() scheduled to run in '+ (daily_credit_refresh/1000/60/60).toFixed(2) +' hours');

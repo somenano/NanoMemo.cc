@@ -1,0 +1,315 @@
+extends layout
+
+block content
+  
+  div(class="pricing-header px-3 py-3 pt-md-5 pb-md-4 mx-auto text-center")
+    h1(class="display-4") RESTful API Documentation
+    p(class="lead") Retrieve and save memos from anywhere
+
+  div(class="container")
+
+    p With this RESTful API you can get existing memos and save new memos from anywhere. All cryptographic functions such as digital signing and encryption or decryption occur on the client, though. We have a JavaScript library available to assist you with these "client-side" actions&nbsp;
+      a(href="https://github.com/somenano/NanoMemoTools") here on Github
+        | &nbsp;(or &nbsp;
+      a(href="https://www.npmjs.com/package/nanomemotools") npm
+        | )
+
+    div(id="endpoints")
+      h3 Available endpoints
+      ul
+        li
+          a(href="#hash") #{url}/memo/block/:hash
+        li
+          a(href="#save") #{url}/memo/new
+        li
+          a(href="#user") #{url}/user
+
+    hr(width="50%")
+
+    div(id="hash")
+      h3 Retrieve a memo
+      table(class="table")
+        tbody
+          tr
+            td(class="text-muted") endpoint
+            td #{url}/api/memo/block/:hash
+          tr
+            td(class="text-muted") request type
+            td GET
+          tr
+            td(class="text-muted") API Key Required
+            td No
+          tr
+            td(class="text-muted") description
+            td Retrieves a memo from the server
+          tr
+            td(class="text-muted") arguments
+            td
+              small
+                  ul
+                    li
+                      strong :hash
+                      | &nbsp;- 64-hex string representing a Nano block
+          tr
+            td(class="text-muted") response
+            td
+              small
+                ul
+                  li
+                    strong dtg:
+                    | &nbsp;timestamp of response
+                  li
+                    strong success: 
+                    | &nbsp;true if success, false otherwise
+                  li
+                    strong error:
+                    | &nbsp;descriptive string if success == false, undefined otherwise
+                  li
+                    strong data.message:
+                    | &nbsp;messsag in plaintext or encrypted
+                  li
+                    strong data.hash:
+                    | &nbsp;Nano block hash the memo is associated with
+                  li
+                    strong data.signature:
+                    | &nbsp;digital signature certifying that this message is associated with the state hash
+                  li
+                    strong data.version_sign:
+                    | &nbsp;version of digital signature algorithm
+                  li
+                    strong data.version_encrypt:
+                    | &nbsp;version of encryption algorithm, undefined if not encrypted
+                  li
+                    strong data.dtg:
+                    | &nbsp;timestamp of memo creation
+                  li
+                    strong data.signing_address:
+                    | &nbsp;Nano address associated with hash who created and signed the memo
+                  li
+                    strong data.decrypting_address:
+                    | &nbsp;Nano address for which the message has been encrypted. Only the decypring address' private key can decrypt and read the message, undefined if not encrypted
+                strong Sample response:
+                br
+                div(style="word-break:break-all;")
+                  | &nbsp;{
+                  br
+                  | &nbsp;&nbsp;&nbsp;"dtg":"2021-04-17T02:23:43.060Z",
+                  br
+                  | &nbsp;&nbsp;&nbsp;"success":true,
+                  br
+                  | &nbsp;&nbsp;&nbsp;"data":{
+                  br
+                  | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"message":"This is an example of a non-encrypted message that is sent in a memo",
+                  br
+                  | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"hash":"6E3FD6E599E580FF631AF81477DB72A766D0740F6D81A0DE68F69035CE71D5DD",
+                  br
+                  | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"signature":"fa7c7ee72d7993cbf854585c1bbf305d6a75bfa55a87131aad3b3b1205d257944054fbfca96098a9a6eaa6b84a593f5d174f7696b90dd31b7bf7db8f20e22b0a",
+                  br
+                  | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"version_sign":1,
+                  br
+                  | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"dtg":"2021-04-15T21:06:23.490Z",
+                  br
+                  | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"signing_address":"nano_1k1zfz85cj4p89wib9w74c6brepkkcmf4dp9mqb4pyfsndbjhbu1ch7i4gdx"
+                  br
+                  | &nbsp;&nbsp;&nbsp;}
+                  br
+                  | &nbsp;}
+
+    div(id="save")
+      h3 Save a new memo
+      table(class="table")
+        tbody
+          tr
+            td(class="text-muted") endpoint
+            td #{url}/api/memo/new
+          tr
+            td(class="text-muted") request type
+            td POST
+          tr
+            td(class="text-muted") API Key Required
+            td
+              a(href="/api") Yes
+          tr
+            td(class="text-muted") description
+            td Submits all required memo fields to be saved on the server.
+          tr
+            td(class="text-muted") arguments
+            td
+              small
+                ul
+                  li
+                    strong api_key
+                    | &nbsp;- API key assigned
+                  li
+                    strong api_secret
+                    | &nbsp;- API secret key assigned
+                  li
+                    strong hash
+                    | &nbsp;- 64-hex string representing a Nano block
+                  li
+                    strong message
+                    | &nbsp;- plaintext or ciphertext message no more than #{message_max_length} characters long
+                  li
+                    strong signing_address
+                    | &nbsp;- Nano address for account that signed the memo
+                  li
+                    strong decrypting_address
+                    | &nbsp;- [optional, only if encrypted memo] Nano address for account that can decrypt the memo
+                  li
+                    strong signature
+                    | &nbsp;- 128-hex string signature
+                  li
+                    strong version_sign
+                    | &nbsp;- version of digital signature algorithm; Current: #{NanoMemoTools.version.sign}
+                  li
+                    strong version_encrypt
+                    | &nbsp;- [optional, only if encrypted memo] version of digital signature algorithm; Current: #{NanoMemoTools.version.encrypt}
+
+          tr
+            td(class="text-muted") response
+            td
+              small
+                ul
+                  li
+                    strong dtg:
+                    | &nbsp;timestamp of response
+                  li
+                    strong success: 
+                    | &nbsp;true if success, false otherwise
+                  li
+                    strong error:
+                    | &nbsp;descriptive string if success == false, undefined otherwise
+                  li
+                    strong credits_balance:
+                    | &nbsp;remaining credits available to the user
+                  li
+                    strong data.message:
+                    | &nbsp;messsag in plaintext or encrypted
+                  li
+                    strong data.hash:
+                    | &nbsp;Nano block hash the memo is associated with
+                  li
+                    strong data.signature:
+                    | &nbsp;digital signature certifying that this message is associated with the state hash
+                  li
+                    strong data.version_sign:
+                    | &nbsp;version of digital signature algorithm
+                  li
+                    strong data.version_encrypt:
+                    | &nbsp;version of encryption algorithm, undefined if not encrypted
+                  li
+                    strong data.dtg:
+                    | &nbsp;timestamp of memo creation
+                  li
+                    strong data.signing_address:
+                    | &nbsp;Nano address associated with hash who created and signed the memo
+                  li
+                    strong data.decrypting_address:
+                    | &nbsp;Nano address for which the message has been encrypted. Only the decypring address' private key can decrypt and read the message, undefined if not encrypted
+                strong Sample response:
+                br
+                div(style="word-break:break-all;")
+                  | &nbsp;{
+                  br
+                  | &nbsp;&nbsp;&nbsp;"dtg":"2021-04-17T02:23:43.060Z",
+                  br
+                  | &nbsp;&nbsp;&nbsp;"success":true,
+                  br
+                  | &nbsp;&nbsp;&nbsp;"credits_balance": 95,
+                  br
+                  | &nbsp;&nbsp;&nbsp;"data":{
+                  br
+                  | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"message":"This is an example of a non-encrypted message that is sent in a memo",
+                  br
+                  | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"hash":"6E3FD6E599E580FF631AF81477DB72A766D0740F6D81A0DE68F69035CE71D5DD",
+                  br
+                  | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"signature":"fa7c7ee72d7993cbf854585c1bbf305d6a75bfa55a87131aad3b3b1205d257944054fbfca96098a9a6eaa6b84a593f5d174f7696b90dd31b7bf7db8f20e22b0a",
+                  br
+                  | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"version_sign":1,
+                  br
+                  | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"dtg":"2021-04-15T21:06:23.490Z",
+                  br
+                  | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"signing_address":"nano_1k1zfz85cj4p89wib9w74c6brepkkcmf4dp9mqb4pyfsndbjhbu1ch7i4gdx"
+                  br
+                  | &nbsp;&nbsp;&nbsp;}
+                  br
+                  | &nbsp;}
+
+    div(id="user")
+      h3 Retrieve user information
+      table(class="table")
+        tbody
+          tr
+            td(class="text-muted") endpoint
+            td #{url}/api/user
+          tr
+            td(class="text-muted") request type
+            td POST
+          tr
+            td(class="text-muted") API Key Required
+            td
+              a(href="/api") Yes
+          tr
+            td(class="text-muted") description
+            td Retrieves user information to include credits available and daily credit refill quantity/countdown
+          tr
+            td(class="text-muted") arguments
+            td
+              small
+                ul
+                  li
+                    strong api_key
+                    | &nbsp;- API key assigned
+                  li
+                    strong api_secret
+                    | &nbsp;- API secret key assigned
+
+          tr
+            td(class="text-muted") response
+            td
+              small
+                ul
+                  li
+                    strong dtg:
+                    | &nbsp;timestamp of response
+                  li
+                    strong success: 
+                    | &nbsp;true if success, false otherwise
+                  li
+                    strong error:
+                    | &nbsp;descriptive string if success == false, undefined otherwise
+                  li
+                    strong data.api_key:
+                    | &nbsp;public api key
+                  li
+                    strong data.credits_balance:
+                    | &nbsp;remaining credits balance on api key
+                  li
+                    strong data.daily_credits:
+                    | &nbsp;amount of credits issued to the key each day if the quantity is below daily_credits
+                  li
+                    strong data.daily_seconds_remaining:
+                    | &nbsp;number of seconds remaining until daily credits are issued
+
+                strong Sample response:
+                br
+                div(style="word-break:break-all;")
+                  | &nbsp;{
+                  br
+                  | &nbsp;&nbsp;&nbsp;"dtg":"2021-04-17T02:23:43.060Z",
+                  br
+                  | &nbsp;&nbsp;&nbsp;"success":true,
+                  br
+                  | &nbsp;&nbsp;&nbsp;"data":{
+                  br
+                  | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"api_key":"ACB123...",
+                  br
+                  | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"credits_balance":95,
+                  br
+                  | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"daily_credits":100,
+                  br
+                  | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"daily_seconds_remaining":43200,
+                  br
+                  | &nbsp;&nbsp;&nbsp;}
+                  br
+                  | &nbsp;}
