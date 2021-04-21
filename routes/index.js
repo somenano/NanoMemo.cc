@@ -39,6 +39,7 @@ router.get('/docs/api', async function(req, res, next) {
     url: process.env.URL,
     wss: process.env.WSS,
     message_max_length: process.env.MESSAGE_LENGTH,
+    max_memo_return: process.env.MAX_MEMO_RETURN,
     NanoMemoTools: NanoMemoTools
   });
 });
