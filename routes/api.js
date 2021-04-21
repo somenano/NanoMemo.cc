@@ -202,7 +202,7 @@ router.get('/memo/block/:hash', async function(req, res, next) {
 
     // Find data in db
     let memo = await DB.get_db_memo_from_hash(hash).catch(function(e) {
-        console.error('In /api/memo/:hash, Error caught while getting memo from hash: '+ hash);
+        console.error('In /api/memo/block/:hash, Error caught while getting memo from hash: '+ hash);
         console.error(e);
         return error_response(res, 'Error searching for memo');
     });
@@ -212,6 +212,39 @@ router.get('/memo/block/:hash', async function(req, res, next) {
 
     // Return data
     return success_response(res, filterMemo(memo));
+});
+
+router.post('/memo/blocks', async function(req, res, next) {
+    // Returns array of memo data
+
+    // Validate parameters
+    if (!req.body.hashes || req.body.hashes.length == undefined) {
+        return error_response(res, 'Invalid hashes provided');
+    }
+    if (req.body.hashes.length > process.env.MAX_MEMO_RETURN) {
+        return error_response(res, 'Requested too many memos, max '+ process.env.MAX_MEMO_RETURN +' memos at one time');
+    }
+    const hashes = req.body.hashes;
+
+    // Standardize hashes
+    for (let i=0 ; i<hashes.length ; i++) hashes[i] = standardize_hash(hashes[i]);
+
+    // Find data in db
+    let memos = await DB.get_db_memos_from_hashes(hashes).catch(function(e) {
+        console.error('In /api/memo/blocks, Error caught while getting memos from hashes');
+        console.error(hashes);
+        console.error(e);
+        return error_response(res, 'Error searching for memos');
+    });
+    if (memos === undefined || memos === null) {
+        return error_response(res, 'Error searching for memos');
+    }
+
+    let filtered_memos = [];
+    for (memo of memos) filtered_memos.push(filterMemo(memo));
+
+    // Return data
+    return success_response(res, filtered_memos);
 });
 
 /*************

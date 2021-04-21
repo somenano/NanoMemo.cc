@@ -15,6 +15,10 @@ function convert_db_memo_to_memo(db_memo) {
     return memo;
 }
 
+exports.get_db_memos_from_hashes = function(hashes) {
+    return Memo.find({hash: {$in: hashes}}).exec();
+}
+
 exports.get_db_memo_from_hash = function(hash) {
     return Memo.findOne({hash: hash}).exec();
 }

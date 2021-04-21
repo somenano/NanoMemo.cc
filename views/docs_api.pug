@@ -20,6 +20,8 @@ block content
         li
           a(href="#hash") #{url}/api/memo/block/:hash
         li
+          a(href="#hashes") #{url}/api/memo/blocks
+        li
           a(href="#save") #{url}/api/memo/new
         li
           a(href="#user") #{url}/api/user
@@ -118,6 +120,62 @@ block content
                   | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"signing_address":"nano_1k1zfz85cj4p89wib9w74c6brepkkcmf4dp9mqb4pyfsndbjhbu1ch7i4gdx"
                   br
                   | &nbsp;&nbsp;&nbsp;}
+                  br
+                  | &nbsp;}
+
+    div(id="hashes")
+      h3 Retrieve one or more memos
+      table(class="table")
+        tbody
+          tr
+            td(class="text-muted") endpoint
+            td #{url}/api/memo/blocks
+          tr
+            td(class="text-muted") request type
+            td POST
+          tr
+            td(class="text-muted") API Key Required
+            td No
+          tr
+            td(class="text-muted") description
+            td Retrieves one or more memos from the server
+          tr
+            td(class="text-muted") arguments
+            td
+              small
+                ul
+                  li
+                    strong hashes
+                    | &nbsp;- array of hash strings
+          tr
+            td(class="text-muted") response
+            td
+              small
+                ul
+                  li
+                    strong dtg:
+                    | &nbsp;timestamp of response
+                  li
+                    strong success: 
+                    | &nbsp;true if success, false otherwise
+                  li
+                    strong error:
+                    | &nbsp;descriptive string if success == false, undefined otherwise
+                  li
+                    strong data:
+                    | &nbsp;array of memos (same memo format as&nbsp;
+                    a(href="#hash") /api/memo/:hash
+                    | &nbsp;response)
+                strong Sample response:
+                br
+                div(style="word-break:break-all;")
+                  | &nbsp;{
+                  br
+                  | &nbsp;&nbsp;&nbsp;"dtg":"2021-04-17T02:23:43.060Z",
+                  br
+                  | &nbsp;&nbsp;&nbsp;"success":true,
+                  br
+                  | &nbsp;&nbsp;&nbsp;"data":[{hash: '...', message: '...', ...}, {hash: '...', message: '...', ...}, ...]
                   br
                   | &nbsp;}
 
