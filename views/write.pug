@@ -53,11 +53,13 @@ block content
         pre(class="bg-secondary text-white")
           code(id="post_request")
 
-    script(src="https://www.google.com/recaptcha/api.js" async defer)
-
     form(id="formSave")
 
-      div(class="g-recaptcha" data-sitekey=""+recaptcha_site_key)
+      if ip_credits.credits > 0
+        div(class="alert alert-primary" role="alert") You have #{ip_credits.credits} of #{ip_credits.daily_credits} daily memo saves remaining.
+      else
+        div(class="alert alert-warning" role="alert") You have zero remaining daily memo saves.
+
 
       div(class="form-group")
         div(class="form-check")
@@ -149,8 +151,6 @@ block end_of_body
       // Create output
       const request = `POST #{url}/api/memo/new
     {
-      api_key: -------------,
-      api_secret: -----------------------,
       message: "`+ memo.message +`",
       hash: "`+ memo.hash +`",
       signature: "`+ memo.signature +`",
@@ -178,25 +178,21 @@ block end_of_body
       const memo = signMemo();
       if (!memo) return;
 
-      const recaptcha_token = grecaptcha.getResponse();
-      
-      if (!recaptcha_token || recaptcha_token.length == 0) {
-        console.error('reCAPTCHA token not found');
-        alert('Please complete reCAPTCHA to save memo');
-        return;
-      };
-
       if (!$('#inputTOS')[0].checked) {
         alert('You must accept the Terms of Service to save a memo');
         return;
       }
 
-      const data = {
-        memo: memo,
-        recaptcha_token: recaptcha_token
+      const params = {
+        message: memo.message,
+        hash: memo.hash,
+        signature: memo.signature,
+        version_sign: memo.version_sign,
+        version_encrypt: memo.version_encrypt,
+        decrypting_address: memo.decrypting_address,
+        signing_address: memo.signing_address
       }
-
-      const response = await NanoMemoTools.network.post('#{url}/write/submit', data);
+      const response = await NanoMemoTools.network.post('#{url}/api/memo/new', params);
 
       if (response.success) {
         window.location.href = "#{url}/block/" + response.data.hash;

@@ -133,8 +133,7 @@ block content
             td POST
           tr
             td(class="text-muted") API Key Required
-            td
-              a(href="/api") Yes
+            td No (However, API key will increase daily limits)
           tr
             td(class="text-muted") description
             td Submits all required memo fields to be saved on the server.
@@ -145,10 +144,10 @@ block content
                 ul
                   li
                     strong api_key
-                    | &nbsp;- API key assigned
+                    | &nbsp;- [optional, otherwise rate limited by IP] API key assigned
                   li
                     strong api_secret
-                    | &nbsp;- API secret key assigned
+                    | &nbsp;- [optional, otherwise rate limited by IP] API secret key assigned
                   li
                     strong hash
                     | &nbsp;- 64-hex string representing a Nano block
@@ -212,7 +211,7 @@ block content
                   li
                     strong data.decrypting_address:
                     | &nbsp;Nano address for which the message has been encrypted. Only the decypring address' private key can decrypt and read the message, undefined if not encrypted
-                strong Sample response:
+                strong Sample success response:
                 br
                 div(style="word-break:break-all;")
                   | &nbsp;{
@@ -238,6 +237,19 @@ block content
                   | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"signing_address":"nano_1k1zfz85cj4p89wib9w74c6brepkkcmf4dp9mqb4pyfsndbjhbu1ch7i4gdx"
                   br
                   | &nbsp;&nbsp;&nbsp;}
+                  br
+                  | &nbsp;}
+                
+                strong Sample error response:
+                br
+                div(style="word-break:break-all;")
+                  | &nbsp;{
+                  br
+                  | &nbsp;&nbsp;&nbsp;"dtg":"2021-04-17T02:23:43.060Z",
+                  br
+                  | &nbsp;&nbsp;&nbsp;"success":false,
+                  br
+                  | &nbsp;&nbsp;&nbsp;"error":"Sorry, you have zero remaining daily credits to create new memos."
                   br
                   | &nbsp;}
 
@@ -286,7 +298,10 @@ block content
                     | &nbsp;descriptive string if success == false, undefined otherwise
                   li
                     strong data.api_key:
-                    | &nbsp;public api key
+                    | &nbsp;public api key, undefined if api_key/secret not specified in request
+                  li
+                    strong data.ip:
+                    | &nbsp;IP address for request, undefined if api_key/secret specified in requeset
                   li
                     strong data.credits_balance:
                     | &nbsp;remaining credits balance on api key

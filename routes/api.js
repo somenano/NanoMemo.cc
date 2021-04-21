@@ -109,6 +109,19 @@ const saveMemo = async function(memo, user) {
 router.post('/memo/new', async function(req, res, next) {
     // Writes memo data
 
+    let ip_lookup = {};
+    if (!req.body.api_key || !req.body.api_secret) {
+        // IP Rate Limiting
+
+        const lookup = www.ipConsume(req.ip);
+        if (lookup.error !== undefined) {
+            return error_response(res, lookup.error);
+        } else {
+            req.body.api_key = process.env.GENERIC_USER_API_KEY;
+            req.body.api_secret = process.env.GENERIC_USER_API_SECRET;
+        }
+    }
+
     // Validate User Credentials
     const lookup = await getUser(req.body.api_key, req.body.api_secret).catch(function(e) {
         console.error('In NanoMemo.api /user/new, error caught when running getUser');
@@ -126,6 +139,9 @@ router.post('/memo/new', async function(req, res, next) {
     if (user.credits == 0 || user.credits < -1) {    // Credit balance of -1 is no limit
         return error_response(res, 'Insufficient credit balance');
     }
+
+    // Set user credits to the IP credits
+    if (ip_lookup.credits !== undefined) user.credits = ip_lookup.credits;
 
     // Create Memo Object
     let memo = undefined;
@@ -157,8 +173,8 @@ router.post('/memo/new', async function(req, res, next) {
         return error_response(res, 'Unable to save memo at this time');
     }
 
-    // Decrement user's credits
-    if (user.credits > 0) {
+    // Decrement user's credits (unless its from ipConsume)
+    if (ip_lookup.credits === undefined && user.credits > 0) {
         user.credits -= 1;
         if (user.credits < user.daily_credits) {
             user.daily_refill_needed = true;
@@ -251,23 +267,42 @@ const getUser = async function(api_key, api_secret) {
 
 router.post('/user', async function(req, res, next) {
     // Return user's data
-    const lookup = await getUser(req.body.api_key, req.body.api_secret).catch(function(e) {
-        console.error('In NanoMemo.api /user, error caught when running getUser');
-        console.error(e);
-        return error_response(res, 'Unable to validate API credentials at this time');
-    });
-    if (lookup.error !== undefined) {
-        return error_response(res, lookup.error);
+    let lookup = {};
+    if (!req.body.api_key || !req.body.api_secret) {
+
+        // IP Rate Limiting
+        lookup.data = www.ipCredits(req.ip);
+        lookup.data.ip = req.ip;
+
+    } else {
+
+        lookup = await getUser(req.body.api_key, req.body.api_secret).catch(function(e) {
+            console.error('In NanoMemo.api /user, error caught when running getUser');
+            console.error(e);
+            return error_response(res, 'Unable to validate API credentials at this time');
+        });
+        if (lookup.error !== undefined) {
+            return error_response(res, lookup.error);
+        }
+        if (!lookup || lookup.success != true || lookup.data === undefined) {
+            return error_response(res, 'Unable to validate API credentials at this time');
+        }
+
     }
-    if (!lookup || lookup.success != true || lookup.data === undefined) {
-        return error_response(res, 'Unable to validate API credentials at this time');
+
+    let now = new Date();
+    let daily_credit_refresh = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0) - now;
+    if (daily_credit_refresh < 0) {
+        daily_credit_refresh += 86400000; // it's after 0000, try 0000 tomorrow.
     }
+    daily_credit_refresh /= 1000;
 
     const data = {
         api_key: lookup.data.id,
+        ip: lookup.data.ip,
         credits_balance: lookup.data.credits,
         daily_credits: lookup.data.daily_credits,
-        daily_seconds_remaining: ((new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0) - (new Date())) / 1000).toFixed(0)
+        daily_seconds_remaining: Number(daily_credit_refresh.toFixed(0))
     }
     
     return success_response(res, data);

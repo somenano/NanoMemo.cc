@@ -11,6 +11,8 @@ var apiRouter = require('./routes/api');
 
 var app = express();
 
+app.enable('trust proxy');
+
 // MongoDB setup
 mongoose.connect(process.env.MONGO_DB, {
   useNewUrlParser: true,

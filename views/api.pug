@@ -11,7 +11,7 @@ block content
 
       div(class="card mb-4 box-shadow")
         div(class="card-header")
-          h4(class="my-0 font-weight-normal") Free
+          h4(class="my-0 font-weight-normal") Tools
         div(class="card-body")
           h1(class="card-title pricing-card-title") ∞
             small(class="text-muted") &nbsp;/ day
@@ -24,23 +24,26 @@ block content
 
       div(class="card mb-4 box-shadow")
         div(class="card-header")
-          h4(class="my-0 font-weight-normal") Beta
+          h4(class="my-0 font-weight-normal") Memo Saves
+        div(class="card-body")
+          h1(class="card-title pricing-card-title") #{ip_credits.daily_credits}
+            small(class="text-muted") &nbsp;/ day
+          ul(class="list-unstyled mt-3 mb-4")
+            li No API keys required
+            li Limited memo saves per day
+            li Full feature access
+            li Automatic daily credits
+          a(href="/docs/api#save" role="button" class="btn btn-lg btn-block btn-outline-primary") View Documentation
+
+      div(class="card mb-4 box-shadow")
+        div(class="card-header")
+          h4(class="my-0 font-weight-normal") API Keys
         div(class="card-body")
           h1(class="card-title pricing-card-title") 0 Nano
             small(class="text-muted") &nbsp;/ key
           ul(class="list-unstyled mt-3 mb-4")
-            li Everything from the free plan
-            li #{user_daily_credits} memo saves / day
             li User API credentials
+            li #{user_daily_credits} memo saves / day
+            li Ability to increase limits
             li Automatic daily credits
           a(href="/api/request" role="button" class="btn btn-lg btn-block btn-outline-primary") Request API Key
-
-      div(class="card mb-4 box-shadow")
-        div(class="card-header")
-          h4(class="my-0 font-weight-normal") Extra
-        div(class="card-body")
-          h1(class="card-title pricing-card-title") TBD
-            small(class="text-muted") &nbsp;/ request
-          ul(class="list-unstyled mt-3 mb-4")
-            li For services that might need more than the alloted daily credits, contact us with your request and we will hopefully work out a plan.
-          a(href="/contact" role="button" class="btn btn-lg btn-block btn-outline-primary") Contact Us

@@ -164,9 +164,59 @@ const wss_disseminate = function(memo) {
 }
 exports.wss_disseminate = wss_disseminate;
 
+//////
+// IP rate limiting
+let IP_LIMITS = {};
+exports.ipCredits = function(ip) {
+  const lookup = IP_LIMITS[ip];
+  let ret = {};
+  if (lookup === undefined) {
+    ret.credits = Number(process.env.IP_DAILY_LIMIT);
+  } else {
+    ret.credits = lookup;
+  }
+  ret.daily_credits = Number(process.env.IP_DAILY_LIMIT);
+  return ret;
+}
+
+exports.ipConsume = function(ip) {
+
+  if (IP_LIMITS[ip] !== undefined) {
+    // Existing IP
+
+    if (IP_LIMITS[ip] > 0) {
+      IP_LIMITS[ip] -= 1;
+      return {
+        success: true,
+        credits: IP_LIMITS[ip]
+      }
+    } else {
+      return {
+        success: false,
+        error: 'Sorry, you have zero remaining daily credits to create new memos.'
+      }
+    }
+    
+  } else {
+    // New IP
+    IP_LIMITS[ip] = Number(process.env.IP_DAILY_LIMIT) - 1;
+    return {
+      success: true,
+      credits: IP_LIMITS[ip]
+    }
+  }
+
+}
+
+
+//////
 // Refill user credits daily
 const DB = require('../helpers/db_query.js');
 const refillAPICredits = async function() {
+  // Remove all IP_LIMITS to reset
+  IP_LIMITS = {};
+
+  // Update api users in db
   const users = await DB.get_users_for_daily_credits().catch(function(e) {
     console.error('In www.refillAPICredits an error was caught while running User.get_users_for_daily_credits()');
     console.error(e);
@@ -194,3 +244,4 @@ if (daily_credit_refresh < 0) {
 }
 setTimeout(refillAPICredits, daily_credit_refresh);
 console.log('refillAPICredits() scheduled to run in '+ (daily_credit_refresh/1000/60/60).toFixed(2) +' hours');
+

@@ -5,6 +5,7 @@ const memo = require('../models/memo');
 const DB = require('../helpers/db_query');
 const NanoMemoTools = require('nanomemotools');
 const NanoCurrency = require('nanocurrency');
+const www = require('../bin/www');
 
 
 /* GET home page. */
@@ -87,53 +88,8 @@ router.get('/write', async function(req, res, next) {
     hash: hash,
     message: message,
     decrypting_address: decrypting_address,
-    recaptcha_site_key: process.env.RECAPTCHA_SITE_KEY
+    ip_credits: www.ipCredits(req.ip)
   });
-});
-
-router.post('/write/submit', async function(req, res, next) {
-  // Writes memo with generic user
-
-  const api_key = process.env.GENERIC_USER_API_KEY;
-  const api_secret = process.env.GENERIC_USER_API_SECRET;
-
-  if (!api_key || !api_secret) {
-      console.error('In /api/memo/new/nouser, error reading api_key or api_secret from environment');
-      return res.json({
-        dtg: new Date(),
-        success: false,
-        error: 'Unable to save memo at this time'
-      });
-  }
-
-  const memo_inputs = req.body.memo;
-  const recaptcha_token = req.body.recaptcha_token;
-
-  // validate reCAPTCHA
-  const recaptcha_response = await NanoMemoTools.network.post('https://www.google.com/recaptcha/api/siteverify?secret='+ process.env.RECAPTCHA_SECRET_KEY +'&response='+ recaptcha_token, {});
-  if (!recaptcha_response.success) {
-    return res.json({
-      dtg: new Date(),
-      success: false,
-      error: 'reCAPTCHA validation failed'
-    })
-  }
-
-  // Call POST /api/memo/new
-  const params = {
-    api_key: api_key,
-    api_secret: api_secret,
-    message: memo_inputs.message,
-    hash: memo_inputs.hash,
-    signature: memo_inputs.signature,
-    version_sign: memo_inputs.version_sign,
-    version_encrypt: memo_inputs.version_encrypt,
-    decrypting_address: memo_inputs.decrypting_address,
-    signing_address: memo_inputs.signing_address
-  }
-  let response = await axios.post(process.env.URL+'/api/memo/new', params);
-
-  return res.json(response.data);
 });
 
 router.get('/tos', async function(req, res, next) {
@@ -155,6 +111,7 @@ router.get('/api', async function(req, res, next) {
     title: 'API | NanoMemo.cc',
     page: 'api',
     user_daily_credits: process.env.USER_DAILY_CREDITS,
+    ip_credits: www.ipCredits(req.ip)
   }); 
 });
 
