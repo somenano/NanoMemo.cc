@@ -18,8 +18,6 @@ block content
       h3 Available endpoints
       ul
         li
-          a(href="#hash") #{url}/api/memo/block/:hash
-        li
           a(href="#hashes") #{url}/api/memo/blocks
         li
           a(href="#save") #{url}/api/memo/new
@@ -33,95 +31,6 @@ block content
           a(href="#websocket-subscribe") #{wss}
 
     hr(width="50%")
-
-    div(id="hash")
-      h3 Retrieve a memo
-      table(class="table")
-        tbody
-          tr
-            td(class="text-muted") endpoint
-            td #{url}/api/memo/block/:hash
-          tr
-            td(class="text-muted") request type
-            td GET
-          tr
-            td(class="text-muted") API Key Required
-            td No
-          tr
-            td(class="text-muted") description
-            td Retrieves a memo from the server
-          tr
-            td(class="text-muted") arguments
-            td
-              small
-                  ul
-                    li
-                      strong :hash
-                      | &nbsp;- 64-hex string representing a Nano block
-          tr
-            td(class="text-muted") response
-            td
-              small
-                ul
-                  li
-                    strong dtg:
-                    | &nbsp;timestamp of response
-                  li
-                    strong success: 
-                    | &nbsp;true if success, false otherwise
-                  li
-                    strong error:
-                    | &nbsp;descriptive string if success == false, undefined otherwise
-                  li
-                    strong data.message:
-                    | &nbsp;message in plaintext or encrypted
-                  li
-                    strong data.hash:
-                    | &nbsp;Nano block hash the memo is associated with
-                  li
-                    strong data.signature:
-                    | &nbsp;digital signature certifying that this message is associated with the state hash
-                  li
-                    strong data.version_sign:
-                    | &nbsp;version of digital signature algorithm
-                  li
-                    strong data.version_encrypt:
-                    | &nbsp;version of encryption algorithm, undefined if not encrypted
-                  li
-                    strong data.dtg:
-                    | &nbsp;timestamp of memo creation
-                  li
-                    strong data.signing_address:
-                    | &nbsp;Nano address associated with hash who created and signed the memo
-                  li
-                    strong data.decrypting_address:
-                    | &nbsp;Nano address for which the message has been encrypted. Only the decypring address' private key can decrypt and read the message, undefined if not encrypted
-                strong Sample response:
-                br
-                div(style="word-break:break-all;")
-                  | &nbsp;{
-                  br
-                  | &nbsp;&nbsp;&nbsp;"dtg":"2021-04-17T02:23:43.060Z",
-                  br
-                  | &nbsp;&nbsp;&nbsp;"success":true,
-                  br
-                  | &nbsp;&nbsp;&nbsp;"data":{
-                  br
-                  | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"message":"This is an example of a non-encrypted message that is sent in a memo",
-                  br
-                  | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"hash":"6E3FD6E599E580FF631AF81477DB72A766D0740F6D81A0DE68F69035CE71D5DD",
-                  br
-                  | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"signature":"fa7c7ee72d7993cbf854585c1bbf305d6a75bfa55a87131aad3b3b1205d257944054fbfca96098a9a6eaa6b84a593f5d174f7696b90dd31b7bf7db8f20e22b0a",
-                  br
-                  | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"version_sign":1,
-                  br
-                  | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"dtg":"2021-04-15T21:06:23.490Z",
-                  br
-                  | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"signing_address":"nano_1k1zfz85cj4p89wib9w74c6brepkkcmf4dp9mqb4pyfsndbjhbu1ch7i4gdx"
-                  br
-                  | &nbsp;&nbsp;&nbsp;}
-                  br
-                  | &nbsp;}
 
     div(id="hashes")
       h3 Retrieve one or more memos
@@ -146,7 +55,7 @@ block content
                 ul
                   li
                     strong hashes
-                    | &nbsp;- array of hash strings [max hashes: #{max_memo_return}]
+                    | &nbsp;- array of hashes (length 64-hex representing a Nano block) [max hashes: #{max_memo_return}]
           tr
             td(class="text-muted") response
             td
@@ -163,9 +72,42 @@ block content
                     | &nbsp;descriptive string if success == false, undefined otherwise
                   li
                     strong data:
-                    | &nbsp;array of memos (same memo format as&nbsp;
-                    a(href="#hash") /api/memo/:hash
-                    | &nbsp;response)
+                    | &nbsp;Object of memos represented by hash as the key
+                    ul
+                      li
+                        strong dtg:
+                        | &nbsp;timestamp of response
+                      li
+                        strong success: 
+                        | &nbsp;true if success, false otherwise
+                      li
+                        strong error:
+                        | &nbsp;descriptive string if success == false, undefined otherwise
+                      li
+                        strong data.message:
+                        | &nbsp;message in plaintext or encrypted
+                      li
+                        strong data.hash:
+                        | &nbsp;Nano block hash the memo is associated with
+                      li
+                        strong data.signature:
+                        | &nbsp;digital signature certifying that this message is associated with the state hash
+                      li
+                        strong data.version_sign:
+                        | &nbsp;version of digital signature algorithm
+                      li
+                        strong data.version_encrypt:
+                        | &nbsp;version of encryption algorithm, undefined if not encrypted
+                      li
+                        strong data.dtg:
+                        | &nbsp;timestamp of memo creation
+                      li
+                        strong data.signing_address:
+                        | &nbsp;Nano address associated with hash who created and signed the memo
+                      li
+                        strong data.decrypting_address:
+                        | &nbsp;Nano address for which the message has been encrypted. Only the decypring address' private key can decrypt and read the message, undefined if not encrypted
+
                 strong Sample response:
                 br
                 div(style="word-break:break-all;")
@@ -175,9 +117,44 @@ block content
                   br
                   | &nbsp;&nbsp;&nbsp;"success":true,
                   br
-                  | &nbsp;&nbsp;&nbsp;"data":[{hash: '...', message: '...', ...}, {hash: '...', message: '...', ...}, ...]
+                  | &nbsp;&nbsp;&nbsp;"data":{
+                  br
+                  | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"6E3FD6E599E580FF631AF81477DB72A766D0740F6D81A0DE68F69035CE71D5DD":{
+                  br
+                  | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"message":"This is an example of a non-encrypted message that is sent in a memo",
+                  br
+                  | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"hash":"6E3FD6E599E580FF631AF81477DB72A766D0740F6D81A0DE68F69035CE71D5DD",
+                  br
+                  | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"signature":"fa7c7ee72d7993cbf854585c1bbf305d6a75bfa55a87131aad3b3b1205d257944054fbfca96098a9a6eaa6b84a593f5d174f7696b90dd31b7bf7db8f20e22b0a",
+                  br
+                  | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"version_sign":1,
+                  br
+                  | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"dtg":"2021-04-15T21:06:23.490Z",
+                  br
+                  | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"signing_address":"nano_1k1zfz85cj4p89wib9w74c6brepkkcmf4dp9mqb4pyfsndbjhbu1ch7i4gdx"
+                  br
+                  | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;},
+                  br
+                  | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"ABC123...":{
+                  br
+                  | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"message":"Another memo...",
+                  br
+                  | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"hash":"ABC123...",
+                  br
+                  | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"signature":"abc123...",
+                  br
+                  | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"version_sign":1,
+                  br
+                  | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"dtg":"2021-04-15T21:06:23.490Z",
+                  br
+                  | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"signing_address":"nano_3abc..."
+                  br
+                  | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+                  br
+                  | &nbsp;&nbsp;&nbsp;}
                   br
                   | &nbsp;}
+                  
 
     div(id="save")
       h3 Save a new memo

@@ -75,9 +75,16 @@ const saveMemo = async function(memo, user) {
     }
 
     // Validate memo against Nano Network
-    const node_validated = await NanoMemoTools.memo.nodeValidated(memo, process.env.NODE_RPC_PROXY, process.env.NODE_RPC_USER, process.env.NODE_RPC_PASSWORD);
-    if (node_validated == false) return {success: false, dtg: new Date(), error: 'Memo is not valid for block on the Nano Network, the wrong secret key may have been used for this block\'s account.'}
-    else if (node_validated === undefined) return {success: false, dtg: new Date(), error: 'No block on the Nano Network found with corresponding hash'}
+    const node_validated = await NanoMemoTools.memo.nodeValidated([memo], process.env.NODE_RPC_PROXY, process.env.NODE_RPC_USER, process.env.NODE_RPC_PASSWORD);
+    try {
+        if (node_validated.not_found.indexOf(memo.hash) != -1) return {success: false, dtg: new Date(), error: 'Block is not found on the Nano Network.'}
+        else if (node_validated.invalid.indexOf(memo.hash) != -1) return {success: false, dtg: new Date(), error: 'Memo is not valid for block on the Nano Network, the wrong secret key may have been used for this block\'s account.'}
+        else if (node_validated.valid.indexOf(memo.hash) == -1) return {success: false, dtg: new Date(), error: 'Error validating hash against the Nano Network.'}
+    } catch(e) {
+        console.error('In saveMemo, an error was caught running NanoMemoTools.memo.nodeValidated');
+        console.error(e);
+        return {success: false, dtg: new Date(), error: 'Error validating hash against the Nano Network'}
+    }
 
     // Create memo object
     let memo_db = new Memo({
@@ -89,7 +96,7 @@ const saveMemo = async function(memo, user) {
         user: user,
         signing_address: memo.signing_address,
         decrypting_address: memo.decrypting_address,
-        validated: node_validated
+        validated: (node_validated.valid.indexOf(memo.hash) >= 0)
     });
 
     // Save memo
@@ -109,6 +116,17 @@ const saveMemo = async function(memo, user) {
 router.post('/memo/new', async function(req, res, next) {
     // Writes memo data
 
+
+    // Validate inputs
+    if (!NanoMemoTools.memo.validateHash(req.body.hash)) return error_response(res, 'Invalid hash value');
+    if (!NanoMemoTools.memo.validateMessage(req.body.message)) return error_response(res, 'Invalid message value');
+    if (!NanoMemoTools.memo.validateMessage(req.body.signing_address)) return error_response(res, 'Invalid signing_address value');
+    if (req.body.version_encrypt !== undefined && !NanoMemoTools.memo.validateMessage(req.body.decrypting_address)) return error_response(res, 'Invalid decrypting_address value');
+    if (!NanoMemoTools.memo.validateMessage(req.body.signature)) return error_response(res, 'Invalid signature value');
+    if (req.body.version_sign != NanoMemoTools.version.sign) return error_response(res, 'Invalid version_sign value. Must use: '+ NanoMemoTools.version.sign);
+    if (req.body.version_encrypt !== undefined && req.body.version_encrypt != NanoMemoTools.version.encrypt) return error_response(res, 'Invalid version_encrypt value. Must use: '+ NanoMemoTools.version.encrypt);
+
+    // Check for IP Rate Limiting
     let ip_lookup = {};
     if (!req.body.api_key || !req.body.api_secret) {
         // IP Rate Limiting
@@ -145,24 +163,31 @@ router.post('/memo/new', async function(req, res, next) {
 
     // Create Memo Object
     let memo = undefined;
-    if (req.body.version_encrypt !== undefined) {
-        memo = new NanoMemoTools.memo.EncryptedMemo(
-            req.body.hash,
-            req.body.message,
-            req.body.signing_address,
-            req.body.decrypting_address,
-            req.body.signature,
-            req.body.version_sign,
-            req.body.version_encrypt
-        );
-    } else {
-        memo = new NanoMemoTools.memo.Memo(
-            req.body.hash,
-            req.body.message,
-            req.body.signing_address,
-            req.body.signature,
-            req.body.version_sign
-        );
+    try {
+        if (req.body.version_encrypt !== undefined) {
+            memo = new NanoMemoTools.memo.EncryptedMemo(
+                req.body.hash,
+                req.body.message,
+                req.body.signing_address,
+                req.body.decrypting_address,
+                req.body.signature,
+                req.body.version_sign,
+                req.body.version_encrypt
+            );
+        } else {
+            memo = new NanoMemoTools.memo.Memo(
+                req.body.hash,
+                req.body.message,
+                req.body.signing_address,
+                req.body.signature,
+                req.body.version_sign
+            );
+        }
+    } catch(e) {
+        console.error('In /memo/new, an error was caught while creating the memo');
+        console.error(req.body);
+        console.error(e);
+        return error_response(res, 'Unable to create memo with provided parameters');
     }
     
     const memo_saved = await saveMemo(memo, user);
@@ -191,29 +216,6 @@ router.post('/memo/new', async function(req, res, next) {
     return success_response(res, filterMemo(memo_saved.data), user);
 });
 
-router.get('/memo/block/:hash', async function(req, res, next) {
-    // Returns memo data
-
-    // Validate parameters
-    if (!nanocurrency.checkHash(req.params.hash)) {
-        return error_response(res, 'Invalid hash provided');
-    }
-    const hash = standardize_hash(req.params.hash);
-
-    // Find data in db
-    let memo = await DB.get_db_memo_from_hash(hash).catch(function(e) {
-        console.error('In /api/memo/block/:hash, Error caught while getting memo from hash: '+ hash);
-        console.error(e);
-        return error_response(res, 'Error searching for memo');
-    });
-    if (!memo) {
-        return error_response(res, 'Memo not found');
-    }
-
-    // Return data
-    return success_response(res, filterMemo(memo));
-});
-
 router.post('/memo/blocks', async function(req, res, next) {
     // Returns array of memo data
 
@@ -240,8 +242,8 @@ router.post('/memo/blocks', async function(req, res, next) {
         return error_response(res, 'Error searching for memos');
     }
 
-    let filtered_memos = [];
-    for (memo of memos) filtered_memos.push(filterMemo(memo));
+    let filtered_memos = {};
+    for (memo of memos) filtered_memos[memo.hash] = filterMemo(memo);
 
     // Return data
     return success_response(res, filtered_memos);
@@ -371,7 +373,7 @@ router.post('/admin/user/new', async function(req, res, next) {
         console.error('In NanoMemo.api /user/new, error caught when saving new user');
         console.error(new_user);
         console.error(e);
-        return error_message(res, 'Unable to create new user at this time');
+        return error_response(res, 'Unable to create new user at this time');
     });
 
     const data = {

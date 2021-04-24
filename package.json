@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "private": false,
   "scripts": {
-    "start": "node ./bin/www"
+    "start": "node ./bin/www",
+    "test": "mocha --timeout 20000 --exit"
   },
   "repository": {
     "type": "git",
@@ -26,8 +27,13 @@
     "mongoose-lean-virtuals": "^0.7.6",
     "morgan": "~1.9.1",
     "nanocurrency": "^2.5.0",
-    "nanomemotools": "^0.1.7",
+    "nanomemotools": "^0.1.8",
     "pug": "^3.0.2",
     "ws": "^7.4.4"
+  },
+  "devDependencies": {
+    "chai": "^4.3.4",
+    "chai-http": "^4.3.0",
+    "mocha": "^8.3.2"
   }
 }

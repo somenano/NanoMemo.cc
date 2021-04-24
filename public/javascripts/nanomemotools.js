@@ -4873,13 +4873,16 @@ const NanoCurrency = require('nanocurrency');
 */
 const validateMessage = function(message, maxlength=512) {
   try {
-      message = message.toString('ascii');
-
-      if (message.length > maxlength) return false;
-
-      return message;
-  } catch {
-      return false;
+    console.log('in validateMessage 1');
+    message = message.toString('ascii');
+    console.log('in validateMessage 2');
+    console.log(message.length > maxlength);
+    // return message.length <= maxlength;
+    if (message.length > maxlength) return false;
+    console.log('in validateMessage 3');
+    return true;
+  } catch(e) {
+    return false;
   }
 }
 module.exports.validateMessage = validateMessage;
@@ -4894,7 +4897,7 @@ const validateSignature = function(signature) {
   try {
       if (signature.length != 128) return false;
       return true;
-  } catch {
+  } catch(e) {
       return false;
   }
 }
@@ -4909,7 +4912,7 @@ module.exports.validateSignature = validateSignature;
 const validateKey = function(key) {
   try {
       return NanoCurrency.checkKey(key);
-  } catch {
+  } catch(e) {
       return false;
   }
 }
@@ -4924,7 +4927,7 @@ module.exports.validateKey = validateKey;
 const validateAddress = function(address) {
   try {
       return NanoCurrency.checkAddress(address);
-  } catch {
+  } catch(e) {
       return false;
   }
 }
@@ -4939,39 +4942,74 @@ module.exports.validateAddress = validateAddress;
 const validateHash = function(hash) {
   try {
       return NanoCurrency.checkHash(hash);
-  } catch {
+  } catch(e) {
       return false;
   }
 }
 module.exports.validateHash = validateHash;
 
 /**
- * This function validates a Memo against the Nano Network; No username/password required if connecting to DEFAULT_SERVER or public API
- * @param {Memo} memo Memo to validate against the Nano Network
+ * This function validates one or more Memos against the Nano Network; No username/password required if connecting to DEFAULT_SERVER or public API
+ * @param {array} memos Array of Memos to validate against the Nano Network
  * @param {string} [url=node.DEFAULT_SERVER] url of Nano Node RPC
  * @param {string} [username=undefined] username for Nano Node RPC authentication
  * @param {string} [password=password] password for Nano Node RPC authentication
- * @returns {boolean} True if valid, false if not valid, undefined if corresponding block not found
+ * @returns {object} { valid: [<array of hashes>], invalid: [<array of hashes>], not_found: [<array of hashes>] }; returns undefined on error
  */
-const nodeValidated = async function(memo, url=node.DEFAULT_SERVER, username=undefined, password=undefined) {
-  if (!memo.valid_signature) return false;
+ const nodeValidated = async function(memos, url=node.DEFAULT_SERVER, username=undefined, password=undefined) {
 
-  const block = await node.block_info(memo.hash, url, username, password).catch(function(e) {
-    console.error('In memo.nodeValidated, an error was caught running node.block_info');
+  let ret = {
+    valid: [],
+    invalid: [],
+    not_found: []
+  }
+
+  let local_valid_memos = [];
+  let local_invalid_memos = [];
+  for (let memo of memos) {
+    if (memo.valid_signature) local_valid_memos.push(memo);
+    else local_invalid_memos.push(memo.hash);
+  }
+
+  // Return early if there are no valid memos to check
+  // if (local_valid_memos.length == 0) return ret;
+
+  // Query node
+  const response = await node.blocks_info(memos.map(memo => memo.hash), url, username, password).catch(function(e) {
+    console.error('In memo.nodeValidated, an error was caught running node.blocks_info');
+    console.error(memos.map(memo => memo.hash));
     console.error(e);
     return undefined;
   });
-  if (!block || !block.block_account) {
-      // hash not found on Nano Network, return undefined
-      return undefined;
+  if (!response || (!response.blocks && !response.blocks_not_found)) {
+    // Invalid response
+    console.error('In memo.nodeValidate, no response was received from node.blocks_info');
+    return undefined;
   }
+  if (response.blocks == '') response.blocks = {};
+  if (response.blocks_not_found == '') response.blocks_not_found = {};
 
   // Memo has already been validated with the signing_address
   // Don't compare addresses because nano_ or xrb_ prefixes may not match, so convert to public key
   //  and compare to be same
-  if (tools.getPublicKeyFromAddress(memo.signing_address).toUpperCase() == tools.getPublicKeyFromAddress(block.block_account).toUpperCase()) return true;
+  for (let memo of memos) {
 
-  return false;
+    if (response.blocks[memo.hash] !== undefined) {
+      // Block exists exists on the Nano Network
+      const block = response.blocks[memo.hash];
+      const block_signing_public_key = tools.getPublicKeyFromAddress(block.block_account);
+      if (memo.valid_signature && memo.signing_public_key.toUpperCase() == block_signing_public_key.toUpperCase()) {
+        // Memo is valid and matches keys with the block
+        ret.valid.push(memo.hash);
+      } else {
+        ret.invalid.push(memo.hash);
+      }
+    } else {
+      ret.not_found.push(memo.hash);
+    }
+  }
+
+  return ret;
 }
 module.exports.nodeValidated = nodeValidated;
 
@@ -5073,11 +5111,15 @@ class Memo {
       throw new TypeError('Invalid hash parameter');
     }
 
+    console.log('about to validate message');
+
     if (validateMessage(message)) {
       this.message = message;
     } else {
       throw new TypeError('Invalid message parameter');
     }
+
+    console.log('validated message');
 
     if (validateAddress(signing_address)) {
       this.signing_address = signing_address;
@@ -5308,6 +5350,27 @@ const block_info = function(hash, url=DEFAULT_SERVER, username=undefined, passwo
     return network.post(url, input, basicAuth(username, password));
 }
 module.exports.block_info = block_info;
+
+/**
+* This function requests information of one or more Nano Blocks from a given RPC server
+* @public
+* @param {array} hashes array of hash identifiers for requested Nano Blocks
+* @param {string} [url=DEFAULT_SERVER] target RPC server to send the request
+* @param {string} [username=undefined] username for Nano Node RPC authentication
+* @param {string} [password=password] password for Nano Node RPC authentication
+* @returns {Promise} Promise object represents the fields returned from an RPC block_info request
+*/
+const blocks_info = function(hashes, url=DEFAULT_SERVER, username=undefined, password=undefined) {
+    input = {
+        action: 'blocks_info',
+        include_not_found: true,
+        json_block: true,
+        hashes: hashes
+    }
+
+    return network.post(url, input, basicAuth(username, password));
+}
+module.exports.blocks_info = blocks_info;
 }).call(this)}).call(this,require("buffer").Buffer)
 },{"./network":37,"buffer":44}],39:[function(require,module,exports){
 /**
@@ -5316,7 +5379,6 @@ module.exports.block_info = block_info;
  */
 
 const network = require('./network.js');
-const node = require('./node');
 const Memo = require('./memo.js');
 let SERVER = 'https://nanomemo.cc';
 let WSS = 'wss://nanomemo.cc';
@@ -5324,12 +5386,12 @@ let WSS = 'wss://nanomemo.cc';
 /**
 * This function gathers user data from the server
 * @public
-* @param {string} api_key user public api key
-* @param {string} api_secret user private secret key
+* @param {string} [api_key=undefined] user public api key; if undefined uses IP rate limiting
+* @param {string} [api_secret=undefined] user private secret key; if undefined uses IP rate limiting
 * @param {string} [endpoint=/api/user/] endpoint of POST request
 * @returns {Promise} Promise object represents the user data as an object
 */
-const getUserData = async function(api_key, api_secret, endpoint='/api/user') {
+const getUserData = async function(api_key=undefined, api_secret=undefined, endpoint='/api/user') {
     
     const data = {
         api_key: api_key,
@@ -5361,17 +5423,6 @@ const getMemo = async function(hash, endpoint='/api/memo/block/') {
     }
     if (response.error !== undefined) return response;
 
-    // Get corresponding block data
-    const block = await node.block_info(response.data.hash).catch(function(e) {
-        console.error('In NanoMemoTools.server.getMemo, error caught when running node.block_info for hash: '+ response.data.hash);
-        console.error(e);
-        return undefined;
-    });
-    if (block === undefined || block === null) {
-        console.error('In NanoMemoTools.server.getMemo, no block data returned for hash: '+ response.data.hash);
-        return undefined;
-    }
-
     // Create Memo Object
     let memo = undefined;
     if (response.version_encrypt !== undefined) {
@@ -5389,6 +5440,65 @@ const getMemo = async function(hash, endpoint='/api/memo/block/') {
     }
 
     return memo;
+}
+
+/**
+* This function gathers a memo's data from the server
+* @public
+* @param {array} hashes array of 64-hex hash that represents a Nano Block
+* @param {string} [endpoint=/api/memo/blocks/] endpoint of POST request
+* @returns {Promise} Promise object represents array of Memo objectsthe memo object 
+*/
+const getMemos = async function(hashes, endpoint='/api/memo/blocks/') {
+
+    let response = await network.post(SERVER + endpoint, {
+        hashes: hashes
+    });
+    if (response === undefined || response === null) {
+        return {
+            success: false,
+            dtg: new Date(),
+            error: 'No response returned'
+        }
+    }
+    if (response.error !== undefined) return response;
+
+    // Create Memo objects
+    let memos = [];
+    for (let memo_data of response.data) {
+        let memo = undefined;
+        if (memo_data.version_encrypt !== undefined) {
+            // Yes, encrypted
+            memo = new Memo.EncryptedMemo(
+                memo_data.hash,
+                memo_data.message,
+                memo_data.signing_address,
+                memo_data.decrypting_address,
+                memo_data.signature,
+                memo_data.version_sign,
+                memo_data.version_encrypt
+            );
+        } else {
+            // No, not encrypted
+            memo = new Memo.Memo(
+                memo_data.hash,
+                memo_data.message,
+                memo_data.signing_address,
+                memo_data.signature,
+                memo_data.version_sign
+            );
+        }
+
+        // Validate signature locally
+        if (!memo.valid_signature) {
+            console.error('In NanoMemoTools.server.getMemos, memo signature validation failed for hash '+ memo.hash);
+            continue;
+        }
+
+        memos.push(memo);
+    }
+
+    return memos;
 }
 
 /**
@@ -5487,7 +5597,7 @@ module.exports = {
     websocketSubscribe,
     websocketUnsubscribe
 }
-},{"./memo.js":36,"./network.js":37,"./node":38}],40:[function(require,module,exports){
+},{"./memo.js":36,"./network.js":37}],40:[function(require,module,exports){
 (function (Buffer){(function (){
 /**
  * NanoMemoTools.tools module

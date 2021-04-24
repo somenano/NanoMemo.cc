@@ -14,7 +14,11 @@ var app = express();
 app.enable('trust proxy');
 
 // MongoDB setup
-mongoose.connect(process.env.MONGO_DB, {
+let db_uri = process.env.MONGO_DB;
+if (process.env.NODE_ENV == 'test') {
+  db_uri = process.env.MONGO_DB_TEST
+}
+mongoose.connect(db_uri, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
   useCreateIndex: true,
